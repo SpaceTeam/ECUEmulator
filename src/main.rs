@@ -6,39 +6,12 @@ use crate::protocol::raw_can_message::{CanMessageDirection, CanMessagePriority};
 use crate::protocol::CanMessageBufferType::DirectBuffer;
 use socketcan::{CanAnyFrame, CanFdFrame, CanFdSocket, EmbeddedFrame, Id, Socket, StandardId};
 use zerocopy::IntoBytes;
+use crate::protocol::commands::{GetMsgPayload, SetMsgPayload};
 
 fn main() {
     let s = CanFdSocket::open("vcan0");
-    let socket: CanFdSocket;
+    let mut socket: CanFdSocket;
 
-    let id = protocol::CanMessageId::new()
-        .with_direction(CanMessageDirection::NodeToMaster)
-        .with_node_id(4)
-        .with_special_cmd(StandardSpecialCmd)
-        .with_priority(CanMessagePriority::StandardPriority);
-
-    let mut data = protocol::CanMessageData {
-        data_info: protocol::CanMessageDataInfo::new()
-            .with_channel_id(5)
-            .with_can_message_buffer(DirectBuffer),
-        command_id: 2,
-        data: [0; 62],
-    };
-    data.data[13] = 0x3;
-
-    let frame = CanFdFrame::new(
-        Id::Standard(StandardId::new(id.into()).unwrap()),
-        data.as_mut_bytes(),
-    );
-
-    match frame {
-        Some(f) => {
-            println!("Sending frame {:?}", f)
-        }
-        None => {
-            println!("Error sending frame");
-        }
-    }
     match s {
         Ok(s) => socket = s,
         Err(e) => {
@@ -46,6 +19,28 @@ fn main() {
             return;
         }
     }
+    let id = protocol::CanMessageId::new()
+        .with_direction(CanMessageDirection::NodeToMaster)
+        .with_node_id(4)
+        .with_special_cmd(StandardSpecialCmd)
+        .with_priority(CanMessagePriority::StandardPriority);
+
+    let message = protocol::channels::GenericCommand::GenericResGetVariable {
+        payload: SetMsgPayload {
+            variable_id: 1,
+            value: 10
+        },
+    };
+
+    match protocol::message::send_message(id, protocol::message::Message::GenericChannelMessage(message), &mut socket){
+        Ok(a)=>{
+            println!("Message sent successfully");
+        },
+        Err(e)=>{
+            eprintln!("Error sending message: {}", e);
+        }
+    }
+
     loop {
         let frame = socket.read_frame().unwrap();
         println!("{:?}", frame);
@@ -59,4 +54,7 @@ fn main() {
             println!("Received CAN FD frame: {:?}", frame);
         }
     }
+
+
+
 }

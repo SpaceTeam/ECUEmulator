@@ -1,3 +1,5 @@
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
+
 #[repr(isize)]
 pub enum CommonCommands {
     CommonReqResetSettings = 0,                          // NO payload
@@ -27,11 +29,15 @@ impl From<CommonCommands> for u8 {
     }
 }
 #[derive(Debug)]
+#[derive(FromBytes,IntoBytes,Immutable)]
+#[repr(C, packed)]
 pub struct SetMsgPayload {
     pub variable_id: u8,
     pub value: u32,
 }
 #[derive(Debug)]
+#[derive(FromBytes,IntoBytes,Immutable)]
+#[repr(C, packed)]
 pub struct GetMsgPayload {
     pub variable_id: u8,
 }
