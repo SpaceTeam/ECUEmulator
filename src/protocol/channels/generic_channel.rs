@@ -1,22 +1,22 @@
-use crate::protocol::commands::{GetMsgPayload, SetMsgPayload};
+use crate::protocol::commands::{GetMsgPayload, SetMsgPayload, common_command_discriminants};
 use crate::protocol::message::CommandTrait;
 use crate::protocol::CanMessageData;
 use zerocopy::{FromZeros, IntoBytes};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-/*#[derive(Debug)]
+#[derive(Debug)]
 #[repr(isize)]
 //TODO @Michael do you know of a way to make the enum variants have payloads and also have discriminants?
 pub enum GenericCommand{
-    GenericReqResetAllSettings = CommonReqResetSettings as isize,	// NO payload
-    GenericResResetAllSettings = CommonResResetSettings as isize,	// NO payload
-    GenericReqStatus = CommonReqStatus as isize,					// NO payload
-    GenericResStatus = CommonResStatus as isize,					// TODO: some status msg
-    GenericReqSetVariable{payload: SetMsgPayload} = CommonReqSetVariable as isize,		// SetMsg_t
-    GenericResSetVariable{payload: SetMsgPayload} = CommonResSetVariable as isize,		    // SetMsg_t
-    GenericReqGetVariable{payload: GetMsgPayload} = CommonReqGetVariable as isize,		    // GetMsg_t
-    GenericResGetVariable{payload: SetMsgPayload} = CommonResGetVariable as isize,		    // SetMsg_t
-    GenericReqSyncClock = CommonTotalCmds as isize,				    // NO FUCKING IDEA
+    GenericReqResetAllSettings = common_command_discriminants::REQ_RESET_SETTINGS,	// NO payload
+    GenericResResetAllSettings = common_command_discriminants::RES_RESET_SETTINGS,	// NO payload
+    GenericReqStatus = common_command_discriminants::REQ_STATUS,					// NO payload
+    GenericResStatus = common_command_discriminants::RES_STATUS,					// TODO: some status msg
+    GenericReqSetVariable{payload: SetMsgPayload} = common_command_discriminants::REQ_SET_VARIABLE,		// SetMsg_t
+    GenericResSetVariable{payload: SetMsgPayload} = common_command_discriminants::RES_SET_VARIABLE,		    // SetMsg_t
+    GenericReqGetVariable{payload: GetMsgPayload} = common_command_discriminants::REQ_GET_VARIABLE,		    // GetMsg_t
+    GenericResGetVariable{payload: SetMsgPayload} = common_command_discriminants::RES_GET_VARIABLE,		    // SetMsg_t
+    GenericReqSyncClock,				    // NO FUCKING IDEA
     GenericResSyncClock,								        	// NO FUCKING IDEA
     GenericReqData,									            	// NO payload
     GenericResData{payload: HeartBeatDataMsg},                      // DataMsg_t
@@ -29,34 +29,8 @@ pub enum GenericCommand{
     GenericReqFlashClear,							            	// NO payload
     GenericResFlashStatus{status: u8},                              // FlashStatusMsg_t //TODO find a way to
     GenericTotalCmds
-}*/
-
-#[derive(Debug)]
-#[repr(isize)]
-//TODO This is "Wrong" since the enum variants with payloads do not have discriminants. Find a way to fix this in the future.
-pub enum GenericCommand {
-    GenericReqResetAllSettings,                       // NO payload
-    GenericResResetAllSettings,                       // NO payload
-    GenericReqStatus,                                 // NO payload
-    GenericResStatus,                                 // TODO: some status msg
-    GenericReqSetVariable { payload: SetMsgPayload }, // SetMsg_t
-    GenericResSetVariable { payload: SetMsgPayload }, // SetMsg_t
-    GenericReqGetVariable { payload: GetMsgPayload }, // GetMsg_t
-    GenericResGetVariable { payload: SetMsgPayload }, // SetMsg_t
-    GenericReqSyncClock,                              // NO FUCKING IDEA
-    GenericResSyncClock,                              // NO FUCKING IDEA
-    GenericReqData,                                   // NO payload
-    GenericResData { payload: HeartBeatDataMsg },     // DataMsg_t
-    GenericReqNodeInfo,                               // NO payload
-    GenericResNodeInfo { payload: NodeInfoMsg },      // NodeInfoMsg_t
-    GenericReqNodeStatus,                             // NO payload
-    GenericResNodeStatus, // NodeStatusMsg_t //TODO Ignoring parameters since it's unused. Remove in the future
-    GenericReqSpeaker,    // SpeakerMsg_t //TODO Ignoring parameters since it's unused. Remove in the future
-    GenericReqThreshold,  // ThresholdMsg_t //TODO Ignoring parameters since it's unused. Remove in the future
-    GenericReqFlashClear, // NO payload
-    GenericResFlashStatus { status: u8 }, // FlashStatusMsg_t //TODO find a way to
-    GenericTotalCmds,
 }
+
 pub enum GenericCommandDiscriminant {
     GenericReqResetAllSettings = 0,
     GenericResResetAllSettings = 1,
