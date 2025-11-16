@@ -29,11 +29,13 @@ pub fn send_message(
     msg: Message,
     socket: &mut CanFdSocket,
 ) -> Result<(), crate::can_manager::errors::SendFrameError> {
-    let mut can_message_data : CanMessageData = msg.as_can_message_data();
+    let mut can_message_data: CanMessageData = msg.as_can_message_data();
     can_message_data.data_info.set_channel_id(msg.into());
 
     // In the old llserver, only DirectBuffer is used.
-    can_message_data.data_info.set_can_message_buffer(CanMessageBufferType::DirectBuffer);
+    can_message_data
+        .data_info
+        .set_can_message_buffer(CanMessageBufferType::DirectBuffer);
 
     send_frame(socket, id, can_message_data)
 }

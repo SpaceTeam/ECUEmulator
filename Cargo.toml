@@ -13,3 +13,5 @@ zerocopy = "0.8.27"
 zerocopy-derive = "0.8.27"
 thiserror = "2.0.17"
 enum_dispatch = "0.3.13"
+ecu_emulator_macros = { path = "ecu_emulator_macros" }
+ecu_emulator_macros_derive = { path = "ecu_emulator_macros/ecu_emulator_macros_derive" }

@@ -1,12 +1,12 @@
 mod can_manager;
+mod message_handling;
 mod protocol;
 
+use crate::protocol::commands::SetMsgPayload;
 use crate::protocol::raw_can_message::MessageSpecialCommand::StandardSpecialCmd;
 use crate::protocol::raw_can_message::{CanMessageDirection, CanMessagePriority};
-use crate::protocol::CanMessageBufferType::DirectBuffer;
-use socketcan::{CanAnyFrame, CanFdFrame, CanFdSocket, EmbeddedFrame, Id, Socket, StandardId};
+use socketcan::{CanAnyFrame, CanFdSocket, EmbeddedFrame, Socket};
 use zerocopy::IntoBytes;
-use crate::protocol::commands::{GetMsgPayload, SetMsgPayload};
 
 fn main() {
     let s = CanFdSocket::open("vcan0");
@@ -28,15 +28,19 @@ fn main() {
     let message = protocol::channels::GenericCommand::GenericResGetVariable {
         payload: SetMsgPayload {
             variable_id: 1,
-            value: 10
+            value: 10,
         },
     };
 
-    match protocol::message::send_message(id, protocol::message::Message::GenericChannelMessage(message), &mut socket){
-        Ok(a)=>{
+    match protocol::message::send_message(
+        id,
+        protocol::message::Message::GenericChannelMessage(message),
+        &mut socket,
+    ) {
+        Ok(a) => {
             println!("Message sent successfully");
-        },
-        Err(e)=>{
+        }
+        Err(e) => {
             eprintln!("Error sending message: {}", e);
         }
     }
@@ -54,7 +58,4 @@ fn main() {
             println!("Received CAN FD frame: {:?}", frame);
         }
     }
-
-
-
 }
