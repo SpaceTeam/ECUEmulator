@@ -15,3 +15,6 @@ thiserror = "2.0.17"
 enum_dispatch = "0.3.13"
 ecu_emulator_macros = { path = "ecu_emulator_macros" }
 ecu_emulator_macros_derive = { path = "ecu_emulator_macros/ecu_emulator_macros_derive" }
+toml = "0.9.8"
+anyhow = "1.0.100"
+clap = { version = "4.5.52", features = ["derive"] }

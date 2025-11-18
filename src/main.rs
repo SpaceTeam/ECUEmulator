@@ -1,61 +1,56 @@
 mod can_manager;
+mod config;
 mod message_handling;
 mod protocol;
 
-use crate::protocol::commands::SetMsgPayload;
-use crate::protocol::raw_can_message::MessageSpecialCommand::StandardSpecialCmd;
-use crate::protocol::raw_can_message::{CanMessageDirection, CanMessagePriority};
-use socketcan::{CanAnyFrame, CanFdSocket, EmbeddedFrame, Socket};
-use zerocopy::IntoBytes;
+use crate::message_handling::{handle_message, parse_can_message};
+use crate::protocol::message::send_message;
+use clap::Parser;
+use socketcan::{CanFdSocket, Socket};
+use std::env;
+use std::string::ToString;
 
 fn main() {
-    let s = CanFdSocket::open("vcan0");
-    let mut socket: CanFdSocket;
-
-    match s {
-        Ok(s) => socket = s,
-        Err(e) => {
-            eprintln!("Error opening CAN FD socket: {}", e);
-            return;
-        }
-    }
-    let id = protocol::CanMessageId::new()
-        .with_direction(CanMessageDirection::NodeToMaster)
-        .with_node_id(4)
-        .with_special_cmd(StandardSpecialCmd)
-        .with_priority(CanMessagePriority::StandardPriority);
-
-    let message = protocol::channels::GenericCommand::GenericResGetVariable {
-        payload: SetMsgPayload {
-            variable_id: 1,
-            value: 10,
-        },
+    let args: Vec<String> = env::args().collect();
+    let mut res = config::config_loader::load_config((&args[1]).as_ref());
+    let Ok(mut config) = res else {
+        println!("Error loading config file");
+        return;
     };
 
-    match protocol::message::send_message(
-        id,
-        protocol::message::Message::GenericChannelMessage(message),
-        &mut socket,
-    ) {
-        Ok(a) => {
-            println!("Message sent successfully");
-        }
-        Err(e) => {
-            eprintln!("Error sending message: {}", e);
-        }
-    }
+    let res = CanFdSocket::open("vcan0");
+
+    let Ok(mut socket) = res else {
+        eprintln!("Error opening CAN FD socket: ",);
+        return;
+    };
 
     loop {
-        let frame = socket.read_frame().unwrap();
-        println!("{:?}", frame);
-        if matches!(frame, CanAnyFrame::Normal(_)) {
-            println!("Received CAN FD frame: {:?}", frame);
-        }
-        if matches!(frame, CanAnyFrame::Fd(_)) {
-            println!("Received CAN FD frame: {:?}", frame);
-        }
-        if matches!(frame, CanAnyFrame::Error(_)) {
-            println!("Received CAN FD frame: {:?}", frame);
+        let res = can_manager::socket_manager::read_frame(&mut socket);
+        let Ok(frame) = res else {
+            eprintln!("Error reading CAN FD frame: ",);
+            continue;
+        };
+        let res = parse_can_message(frame);
+        let Ok((id, msg)) = res else {
+            println!("Error during parsing frame: {}", res.err().unwrap());
+            continue;
+        };
+
+        let response = handle_message(&msg, &mut config);
+
+        match response {
+            None => {}
+            Some(msg) => {
+                //TODO id should of course be the other way around/adressing the main server
+                match send_message(id, msg, &mut socket) {
+                    Ok(_) => {}
+                    Err(err) => {
+                        println!("Error during sending message: {}", err);
+                        continue;
+                    }
+                }
+            }
         }
     }
 }

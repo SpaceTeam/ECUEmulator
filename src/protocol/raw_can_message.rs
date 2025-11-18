@@ -2,15 +2,15 @@ use modular_bitfield::prelude::{B5, B6};
 use modular_bitfield::private::static_assertions;
 use modular_bitfield::{bitfield, Specifier};
 use std::mem::size_of;
-use zerocopy_derive::{FromBytes, IntoBytes};
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-#[derive(Specifier)]
+#[derive(Specifier, Debug)]
 pub enum CanMessageDirection {
     MasterToNode,
     NodeToMaster,
 }
 
-#[derive(Specifier)]
+#[derive(Specifier, Debug)]
 pub enum CanMessagePriority {
     UrgentPriority,
     HighPriority,
@@ -19,6 +19,7 @@ pub enum CanMessagePriority {
 }
 #[bitfield]
 #[repr(u16)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct CanMessageId {
     pub direction: CanMessageDirection,
     pub node_id: B6,
@@ -27,7 +28,7 @@ pub struct CanMessageId {
     #[skip]
     __: B5,
 }
-#[derive(Specifier)]
+#[derive(Specifier, Debug, Clone, Copy, PartialEq)]
 #[repr(i8)]
 pub enum CanMessageBufferType {
     DirectBuffer,
@@ -36,7 +37,7 @@ pub enum CanMessageBufferType {
     ReservedBuffer,
 }
 
-#[derive(Specifier)]
+#[derive(Specifier, Debug)]
 pub enum MessageSpecialCommand {
     AbortSpecialCmd,
     ClockSyncSpecialCmd, // DIR = MASTER2NODE_DIRECTION
@@ -47,14 +48,14 @@ pub enum MessageSpecialCommand {
 }
 
 #[bitfield]
-#[derive(IntoBytes, FromBytes)]
+#[derive(IntoBytes, FromBytes, KnownLayout, Debug, Copy, Clone, Immutable)]
 #[repr(u8)]
 pub struct CanMessageDataInfo {
     pub channel_id: B6,
     pub can_message_buffer: CanMessageBufferType,
 }
 
-#[derive(IntoBytes, FromBytes)]
+#[derive(IntoBytes, FromBytes, KnownLayout, Debug, Immutable)]
 #[repr(C, packed)]
 pub struct CanMessageData {
     pub data_info: CanMessageDataInfo,
