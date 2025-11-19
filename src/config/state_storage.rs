@@ -24,7 +24,7 @@ impl StateStorage {
         u8::from_le_bytes(self.get_value_slice_or_zeros::<1>(key))
     }
     pub fn get_value_slice_or_zeros<const N: usize>(&self, key: String) -> [u8; N] {
-        let bytes = self.get(key).cloned().unwrap_or(vec![0u8; N]);
+        let bytes = self.get(key).map(Vec::as_slice).unwrap_or(&[0u8; N]);
         let mut out = [0u8; N];
         let copy_len = bytes.len().min(N);
         out[..copy_len].copy_from_slice(&bytes[..copy_len]);
