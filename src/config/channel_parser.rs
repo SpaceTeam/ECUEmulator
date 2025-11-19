@@ -1,5 +1,7 @@
 use crate::config::state_storage::StateStorage;
 use anyhow::{anyhow, Context, Error, Result};
+use num_bigint::BigUint;
+use num_traits::Num;
 use toml::{Table, Value};
 
 fn key_in_table<F>(table: &Table, key: &str, f: F) -> Result<()>
@@ -37,42 +39,20 @@ fn get_binary_data_and_set_in_states(
         let as_string = command_value.as_str().ok_or_else(|| {
             anyhow!("Invalid '{key}'. Expecting a String which represents binary data")
         })?;
-        match &as_string[..1] {
-            "0b" => {
-                let mut digits = as_string[..1].to_string();
-                if digits.len() % 2 != 0 {
-                    digits.insert(0, '0');
-                }
-
-                let mut vec: Vec<u8> = Vec::new();
-                for i in (0..digits.len()).step_by(2) {
-                    vec.push(
-                        u8::from_str_radix(&digits[i..i + 2], 16)
-                            .context(format!("{key} is not in hex format. value: {as_string}"))?,
-                    );
-                }
-                states.set(key.parse()?, vec)
-            }
-            "0x" => {
-                let mut digits = as_string[..1].to_string();
-                if digits.len() % 8 != 0 {
-                    for _i in 0..8 - digits.len() % 8 {
-                        digits.insert(0, '0');
-                    }
-                }
-
-                let mut vec: Vec<u8> = Vec::new();
-                for i in (0..digits.len()).step_by(8) {
-                    vec.push(
-                        u8::from_str_radix(&digits[i..i + 8], 2).context(format!(
-                            "{key} is not in binary format. value: {as_string}"
-                        ))?,
-                    );
-                }
-                states.set(key.parse()?, vec)
-            }
+        let radix = match &as_string[..2] {
+            "0b" => 2,
+            "0x" => 16,
             _ => Err(anyhow!("Invalid"))?,
-        }
+        };
+
+        let bytes = BigUint::from_str_radix(&as_string[2..], radix)
+            .with_context(|| {
+                format!("Failed to parse the binary data for key '{key}' with value '{as_string}'")
+            })?
+            .to_bytes_le();
+
+        states.set(key.parse()?, bytes);
+
         Ok(())
     })
 }
