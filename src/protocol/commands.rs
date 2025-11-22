@@ -2,7 +2,7 @@ use ecu_emulator_macros_derive::EnumDiscriminate;
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[derive(Debug, EnumDiscriminate)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum CommonCommands {
     CommonReqResetSettings = CommonCommandsDiscriminant::CommonReqResetSettings.discriminant(), // NO payload
     CommonResResetSettings = CommonCommandsDiscriminant::CommonResResetSettings.discriminant(), // NO payload
@@ -24,7 +24,7 @@ pub enum CommonCommands {
 }
 
 #[derive(Debug, EnumDiscriminate)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum CommonCommandsDiscriminant {
     CommonReqResetSettings = 0,
     CommonResResetSettings = 1,

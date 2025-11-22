@@ -9,7 +9,7 @@ use zerocopy::{FromBytes, FromZeros, IntoBytes};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[derive(Debug, EnumDiscriminate, PartialEq)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum GenericCommand {
     GenericReqResetAllSettings =
         GenericCommandDiscriminant::GenericReqResetAllSettings.discriminant(), // NO payload
@@ -50,7 +50,7 @@ pub enum GenericCommand {
     GenericTotalCmds = GenericCommandDiscriminant::GenericTotalCmds.discriminant(),
 }
 #[derive(EnumDiscriminate)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum GenericCommandDiscriminant {
     GenericReqResetAllSettings = CommonCommands::CommonReqResetSettings.discriminant(),
     GenericResResetAllSettings = CommonCommands::CommonResResetSettings.discriminant(),
@@ -86,89 +86,89 @@ impl TryFrom<CanMessageData> for GenericCommand {
     type Error = Error;
     fn try_from(value: CanMessageData) -> Result<Self, Self::Error> {
         let command_id = value.command_id;
-        match command_id as isize {
-            x if x == GenericCommandDiscriminant::GenericReqResetAllSettings as isize => {
+        match command_id as u8 {
+            x if x == GenericCommandDiscriminant::GenericReqResetAllSettings as u8 => {
                 Ok(GenericCommand::GenericReqResetAllSettings)
             }
-            x if x == GenericCommandDiscriminant::GenericResResetAllSettings as isize => {
+            x if x == GenericCommandDiscriminant::GenericResResetAllSettings as u8 => {
                 Ok(GenericCommand::GenericResResetAllSettings)
             }
-            x if x == GenericCommandDiscriminant::GenericReqStatus as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqStatus as u8 => {
                 Ok(GenericCommand::GenericReqStatus)
             }
-            x if x == GenericCommandDiscriminant::GenericResStatus as isize => {
+            x if x == GenericCommandDiscriminant::GenericResStatus as u8 => {
                 Ok(GenericCommand::GenericResStatus)
             }
-            x if x == GenericCommandDiscriminant::GenericReqSetVariable as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqSetVariable as u8 => {
                 Ok(GenericCommand::GenericReqSetVariable {
                     payload: SetMsgPayload::read_from_prefix(&value.data[..])
                         .map_err(|e| anyhow!("Failed to parse SetMsgPayload: {}", e))?
                         .0,
                 })
             }
-            x if x == GenericCommandDiscriminant::GenericResSetVariable as isize => {
+            x if x == GenericCommandDiscriminant::GenericResSetVariable as u8 => {
                 Ok(GenericCommand::GenericResSetVariable {
                     payload: SetMsgPayload::read_from_prefix(&value.data[..])
                         .map_err(|e| anyhow!("Failed to parse SetMsgPayload: {}", e))?
                         .0,
                 })
             }
-            x if x == GenericCommandDiscriminant::GenericReqGetVariable as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqGetVariable as u8 => {
                 Ok(GenericCommand::GenericReqGetVariable {
                     payload: GetMsgPayload::read_from_prefix(&value.data[..])
                         .map_err(|e| anyhow!("Failed to parse GetMsgPayload: {}", e))?
                         .0,
                 })
             }
-            x if x == GenericCommandDiscriminant::GenericResGetVariable as isize => {
+            x if x == GenericCommandDiscriminant::GenericResGetVariable as u8 => {
                 Ok(GenericCommand::GenericResGetVariable {
                     payload: SetMsgPayload::read_from_prefix(&value.data[..])
                         .map_err(|e| anyhow!("Failed to parse SetMsgPayload: {}", e))?
                         .0,
                 })
             }
-            x if x == GenericCommandDiscriminant::GenericReqSyncClock as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqSyncClock as u8 => {
                 Ok(GenericCommand::GenericReqSyncClock)
             }
-            x if x == GenericCommandDiscriminant::GenericResSyncClock as isize => {
+            x if x == GenericCommandDiscriminant::GenericResSyncClock as u8 => {
                 Ok(GenericCommand::GenericResSyncClock)
             }
-            x if x == GenericCommandDiscriminant::GenericReqData as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqData as u8 => {
                 Ok(GenericCommand::GenericReqData)
             }
-            x if x == GenericCommandDiscriminant::GenericResData as isize => {
+            x if x == GenericCommandDiscriminant::GenericResData as u8 => {
                 Ok(GenericCommand::GenericResData {
                     payload: HeartBeatDataMsg::read_from_prefix(&value.data[..])
                         .map_err(|e| anyhow!("Failed to parse HeartBeatDataMsg: {}", e))?
                         .0,
                 })
             }
-            x if x == GenericCommandDiscriminant::GenericReqNodeInfo as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqNodeInfo as u8 => {
                 Ok(GenericCommand::GenericReqNodeInfo)
             }
-            x if x == GenericCommandDiscriminant::GenericResNodeInfo as isize => {
+            x if x == GenericCommandDiscriminant::GenericResNodeInfo as u8 => {
                 Ok(GenericCommand::GenericResNodeInfo {
                     payload: NodeInfoMsg::read_from_prefix(&value.data[..])
                         .map_err(|e| anyhow!("Failed to parse NodeInfoMsg: {}", e))?
                         .0,
                 })
             }
-            x if x == GenericCommandDiscriminant::GenericReqNodeStatus as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqNodeStatus as u8 => {
                 Ok(GenericCommand::GenericReqNodeStatus)
             }
-            x if x == GenericCommandDiscriminant::GenericResNodeStatus as isize => {
+            x if x == GenericCommandDiscriminant::GenericResNodeStatus as u8 => {
                 Ok(GenericCommand::GenericResNodeStatus)
             }
-            x if x == GenericCommandDiscriminant::GenericReqSpeaker as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqSpeaker as u8 => {
                 Ok(GenericCommand::GenericReqSpeaker)
             }
-            x if x == GenericCommandDiscriminant::GenericReqThreshold as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqThreshold as u8 => {
                 Ok(GenericCommand::GenericReqThreshold)
             }
-            x if x == GenericCommandDiscriminant::GenericReqFlashClear as isize => {
+            x if x == GenericCommandDiscriminant::GenericReqFlashClear as u8 => {
                 Ok(GenericCommand::GenericReqFlashClear)
             }
-            x if x == GenericCommandDiscriminant::GenericResFlashStatus as isize => {
+            x if x == GenericCommandDiscriminant::GenericResFlashStatus as u8 => {
                 Ok(GenericCommand::GenericResFlashStatus {
                     status: value.data[0],
                 })

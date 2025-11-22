@@ -5,7 +5,7 @@ use anyhow::{anyhow, Error};
 use ecu_emulator_macros_derive::EnumDiscriminate;
 use socketcan::CanFdSocket;
 #[derive(Debug, EnumDiscriminate, PartialEq)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum Message {
     GenericChannelMessage(GenericCommand) =
         MessageDiscriminant::GenericChannelMessage.discriminant(),
@@ -14,8 +14,8 @@ pub enum Message {
 impl TryFrom<CanMessageData> for Message {
     type Error = Error;
     fn try_from(value: CanMessageData) -> Result<Self, Self::Error> {
-        match value.data_info.channel_id() as isize {
-            x if x == MessageDiscriminant::GenericChannelMessage as isize => {
+        match value.data_info.channel_id() as u8 {
+            x if x == MessageDiscriminant::GenericChannelMessage as u8 => {
                 // Placeholder: In a real implementation, you would parse the payload to create the GenericCommand
                 Ok(Message::GenericChannelMessage(value.try_into()?))
             }
@@ -34,7 +34,7 @@ impl CommandTrait for Message {
     }
 }
 #[derive(EnumDiscriminate)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum MessageDiscriminant {
     GenericChannelMessage = 5,
 }
