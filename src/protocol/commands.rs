@@ -37,13 +37,13 @@ pub enum CommonCommandsDiscriminant {
     CommonTotalCmds = 8,
 }
 
-#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq)]
+#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq, Clone)]
 #[repr(C, packed)]
 pub struct SetMsgPayload {
     pub variable_id: u8,
     pub value: u32,
 }
-#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq)]
+#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq, Clone)]
 #[repr(C, packed)]
 pub struct GetMsgPayload {
     pub variable_id: u8,

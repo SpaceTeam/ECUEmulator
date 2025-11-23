@@ -4,50 +4,77 @@ use crate::protocol::commands::{
 use crate::protocol::message::CommandTrait;
 use crate::protocol::CanMessageData;
 use anyhow::{anyhow, Error};
+use ecu_emulator_macros::padded_enum;
 use ecu_emulator_macros_derive::EnumDiscriminate;
 use zerocopy::{FromBytes, FromZeros, IntoBytes};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-#[derive(Debug, EnumDiscriminate, PartialEq)]
+padded_enum! {
+
+(size = 63)
+
+#[derive(Debug, EnumDiscriminate, PartialEq, Clone)]
 #[repr(u8)]
 pub enum GenericCommand {
+    #[pad(62)]
     GenericReqResetAllSettings =
         GenericCommandDiscriminant::GenericReqResetAllSettings.discriminant(), // NO payload
+    #[pad(62)]
     GenericResResetAllSettings =
         GenericCommandDiscriminant::GenericResResetAllSettings.discriminant(), // NO payload
+    #[pad(62)]
     GenericReqStatus = GenericCommandDiscriminant::GenericReqStatus.discriminant(), // NO payload
+    #[pad(62)]
     GenericResStatus = GenericCommandDiscriminant::GenericResStatus.discriminant(), // TODO: some status msg
+    #[pad(57)]
     GenericReqSetVariable {
         payload: SetMsgPayload,
     } = GenericCommandDiscriminant::GenericReqSetVariable.discriminant(), // SetMsg_t
+    #[pad(57)]
     GenericResSetVariable {
         payload: SetMsgPayload,
     } = GenericCommandDiscriminant::GenericResSetVariable.discriminant(), // SetMsg_t
+    #[pad(61)]
     GenericReqGetVariable {
         payload: GetMsgPayload,
     } = GenericCommandDiscriminant::GenericReqGetVariable.discriminant(), // GetMsg_t
+    #[pad(57)]
     GenericResGetVariable {
         payload: SetMsgPayload,
     } = GenericCommandDiscriminant::GenericResGetVariable.discriminant(), // SetMsg_t
+    #[pad(62)]
     GenericReqSyncClock = GenericCommandDiscriminant::GenericReqSyncClock.discriminant(), // NO FUCKING IDEA
+    #[pad(62)]
     GenericResSyncClock = GenericCommandDiscriminant::GenericResSyncClock.discriminant(), // NO FUCKING IDEA
+    #[pad(62)]
     GenericReqData = GenericCommandDiscriminant::GenericReqData.discriminant(), // NO payload
+    #[pad(2)]
     GenericResData {
         payload: HeartBeatDataMsg,
     } = GenericCommandDiscriminant::GenericResData.discriminant(), // DataMsg_t
+    #[pad(62)]
     GenericReqNodeInfo = GenericCommandDiscriminant::GenericReqNodeInfo.discriminant(), // NO payload
+    #[pad(22)]
     GenericResNodeInfo {
         payload: NodeInfoMsg,
     } = GenericCommandDiscriminant::GenericResNodeInfo.discriminant(), // NodeInfoMsg_t
+    #[pad(62)]
     GenericReqNodeStatus = GenericCommandDiscriminant::GenericReqNodeStatus.discriminant(), // NO payload
+    #[pad(62)]
     GenericResNodeStatus = GenericCommandDiscriminant::GenericResNodeStatus.discriminant(), // NodeStatusMsg_t //TODO Ignoring parameters since it's unused. Remove in the future
+    #[pad(62)]
     GenericReqSpeaker = GenericCommandDiscriminant::GenericReqSpeaker.discriminant(), // SpeakerMsg_t //TODO Ignoring parameters since it's unused. Remove in the future
+    #[pad(62)]
     GenericReqThreshold = GenericCommandDiscriminant::GenericReqThreshold.discriminant(), // ThresholdMsg_t //TODO Ignoring parameters since it's unused. Remove in the future
+    #[pad(62)]
     GenericReqFlashClear = GenericCommandDiscriminant::GenericReqFlashClear.discriminant(), // NO payload
+    #[pad(61)]
     GenericResFlashStatus {
         status: u8,
     } = GenericCommandDiscriminant::GenericResFlashStatus.discriminant(), // FlashStatusMsg_t
+    #[pad(62)]
     GenericTotalCmds = GenericCommandDiscriminant::GenericTotalCmds.discriminant(),
+}
 }
 #[derive(EnumDiscriminate)]
 #[repr(u8)]
@@ -75,159 +102,7 @@ pub enum GenericCommandDiscriminant {
     GenericTotalCmds = 20,
 }
 
-fn copy_bytes_to_array<const N: usize>(src: &[u8]) -> [u8; N] {
-    let mut dest = [0u8; N];
-    let len = src.len().min(N);
-    dest[..len].copy_from_slice(&src[..len]);
-    dest
-}
-
-impl TryFrom<CanMessageData> for GenericCommand {
-    type Error = Error;
-    fn try_from(value: CanMessageData) -> Result<Self, Self::Error> {
-        let command_id = value.command_id;
-        match command_id as u8 {
-            x if x == GenericCommandDiscriminant::GenericReqResetAllSettings as u8 => {
-                Ok(GenericCommand::GenericReqResetAllSettings)
-            }
-            x if x == GenericCommandDiscriminant::GenericResResetAllSettings as u8 => {
-                Ok(GenericCommand::GenericResResetAllSettings)
-            }
-            x if x == GenericCommandDiscriminant::GenericReqStatus as u8 => {
-                Ok(GenericCommand::GenericReqStatus)
-            }
-            x if x == GenericCommandDiscriminant::GenericResStatus as u8 => {
-                Ok(GenericCommand::GenericResStatus)
-            }
-            x if x == GenericCommandDiscriminant::GenericReqSetVariable as u8 => {
-                Ok(GenericCommand::GenericReqSetVariable {
-                    payload: SetMsgPayload::read_from_prefix(&value.data[..])
-                        .map_err(|e| anyhow!("Failed to parse SetMsgPayload: {}", e))?
-                        .0,
-                })
-            }
-            x if x == GenericCommandDiscriminant::GenericResSetVariable as u8 => {
-                Ok(GenericCommand::GenericResSetVariable {
-                    payload: SetMsgPayload::read_from_prefix(&value.data[..])
-                        .map_err(|e| anyhow!("Failed to parse SetMsgPayload: {}", e))?
-                        .0,
-                })
-            }
-            x if x == GenericCommandDiscriminant::GenericReqGetVariable as u8 => {
-                Ok(GenericCommand::GenericReqGetVariable {
-                    payload: GetMsgPayload::read_from_prefix(&value.data[..])
-                        .map_err(|e| anyhow!("Failed to parse GetMsgPayload: {}", e))?
-                        .0,
-                })
-            }
-            x if x == GenericCommandDiscriminant::GenericResGetVariable as u8 => {
-                Ok(GenericCommand::GenericResGetVariable {
-                    payload: SetMsgPayload::read_from_prefix(&value.data[..])
-                        .map_err(|e| anyhow!("Failed to parse SetMsgPayload: {}", e))?
-                        .0,
-                })
-            }
-            x if x == GenericCommandDiscriminant::GenericReqSyncClock as u8 => {
-                Ok(GenericCommand::GenericReqSyncClock)
-            }
-            x if x == GenericCommandDiscriminant::GenericResSyncClock as u8 => {
-                Ok(GenericCommand::GenericResSyncClock)
-            }
-            x if x == GenericCommandDiscriminant::GenericReqData as u8 => {
-                Ok(GenericCommand::GenericReqData)
-            }
-            x if x == GenericCommandDiscriminant::GenericResData as u8 => {
-                Ok(GenericCommand::GenericResData {
-                    payload: HeartBeatDataMsg::read_from_prefix(&value.data[..])
-                        .map_err(|e| anyhow!("Failed to parse HeartBeatDataMsg: {}", e))?
-                        .0,
-                })
-            }
-            x if x == GenericCommandDiscriminant::GenericReqNodeInfo as u8 => {
-                Ok(GenericCommand::GenericReqNodeInfo)
-            }
-            x if x == GenericCommandDiscriminant::GenericResNodeInfo as u8 => {
-                Ok(GenericCommand::GenericResNodeInfo {
-                    payload: NodeInfoMsg::read_from_prefix(&value.data[..])
-                        .map_err(|e| anyhow!("Failed to parse NodeInfoMsg: {}", e))?
-                        .0,
-                })
-            }
-            x if x == GenericCommandDiscriminant::GenericReqNodeStatus as u8 => {
-                Ok(GenericCommand::GenericReqNodeStatus)
-            }
-            x if x == GenericCommandDiscriminant::GenericResNodeStatus as u8 => {
-                Ok(GenericCommand::GenericResNodeStatus)
-            }
-            x if x == GenericCommandDiscriminant::GenericReqSpeaker as u8 => {
-                Ok(GenericCommand::GenericReqSpeaker)
-            }
-            x if x == GenericCommandDiscriminant::GenericReqThreshold as u8 => {
-                Ok(GenericCommand::GenericReqThreshold)
-            }
-            x if x == GenericCommandDiscriminant::GenericReqFlashClear as u8 => {
-                Ok(GenericCommand::GenericReqFlashClear)
-            }
-            x if x == GenericCommandDiscriminant::GenericResFlashStatus as u8 => {
-                Ok(GenericCommand::GenericResFlashStatus {
-                    status: value.data[0],
-                })
-            }
-            _ => Err(anyhow!("Invalid GenericCommand id: {command_id}")),
-        }
-    }
-}
-impl CommandTrait for GenericCommand {
-    fn as_can_message_data(&self) -> CanMessageData {
-        let mut data = match self {
-            GenericCommand::GenericReqResetAllSettings => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResResetAllSettings => CanMessageData::new_zeroed(),
-            GenericCommand::GenericReqStatus => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResStatus => CanMessageData::new_zeroed(),
-            GenericCommand::GenericReqSetVariable { payload }
-            | GenericCommand::GenericResSetVariable { payload }
-            | GenericCommand::GenericResGetVariable { payload } => {
-                let mut data = CanMessageData::new_zeroed();
-                data.data = copy_bytes_to_array(payload.as_bytes());
-                data
-            }
-            GenericCommand::GenericReqGetVariable { payload } => {
-                let mut data = CanMessageData::new_zeroed();
-                data.data = copy_bytes_to_array(payload.as_bytes());
-                data
-            }
-            GenericCommand::GenericReqSyncClock => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResSyncClock => CanMessageData::new_zeroed(),
-            GenericCommand::GenericReqData => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResData { payload } => {
-                let mut data = CanMessageData::new_zeroed();
-                data.data = copy_bytes_to_array(payload.as_bytes());
-                data
-            }
-            GenericCommand::GenericReqNodeInfo => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResNodeInfo { payload } => {
-                let mut data = CanMessageData::new_zeroed();
-                data.data = <[u8; 62]>::try_from((&payload).as_bytes()).unwrap(); //TODO is it smart to ignore the potential error here?
-                data
-            }
-            GenericCommand::GenericReqNodeStatus => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResNodeStatus => CanMessageData::new_zeroed(),
-            GenericCommand::GenericReqSpeaker => CanMessageData::new_zeroed(),
-            GenericCommand::GenericReqThreshold => CanMessageData::new_zeroed(),
-            GenericCommand::GenericReqFlashClear => CanMessageData::new_zeroed(),
-            GenericCommand::GenericResFlashStatus { status } => {
-                let mut data = CanMessageData::new_zeroed();
-                data.data[0] = *status;
-                data
-            }
-            GenericCommand::GenericTotalCmds => CanMessageData::new_zeroed(),
-        };
-        data.command_id = self.discriminant() as u8;
-        data
-    }
-}
-
-#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq)]
+#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq, Clone)]
 #[repr(C, packed)]
 pub struct NodeInfoMsg {
     pub firmware_version: u32,
@@ -235,7 +110,7 @@ pub struct NodeInfoMsg {
     pub channel_type: [u8; 32],
 }
 
-#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq)]
+#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq, Clone)]
 #[repr(C, packed)]
 pub struct HeartBeatDataMsg {
     pub channel_mask: u32,
