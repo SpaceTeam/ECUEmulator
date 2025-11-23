@@ -1,4 +1,3 @@
-
 /// Generates a padded, `zerocopy`-safe version of an enum.
 ///
 /// # Arguments
@@ -9,7 +8,7 @@
 /// ```rust
 /// use zerocopy::{IntoBytes, FromBytes, Immutable, KnownLayout};
 /// use ecu_emulator_macros::padded_enum;
-/// 
+///
 /// padded_enum! {
 ///     (size = 5) // Mandatory size check. All enum variants must take 5 bytes.
 ///     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -17,13 +16,13 @@
 ///         // Variant 1: Tag(1) + u32(4) + Pad(0) = 5 bytes
 ///         #[pad(0)]
 ///         Move{val: u32},
-/// 
+///
 ///         // Variant 2: Tag(1) + Pad(4) = 5 bytes
 ///         #[pad(4)]
 ///         Stop
 ///     }
 /// }
-/// 
+///
 /// // Usage
 /// let cmd = Command::Move(42);
 /// let wired: CommandPadded = cmd.into();
@@ -37,7 +36,7 @@ macro_rules! padded_enum {
         $vis:vis enum $Original:ident {
             $(
                 #[pad($pad:expr)]
-                $Variant:ident $( { $( $field_name:ident : $field_type:ty ),* } )? $( = $disc:expr )?
+                $Variant:ident $( { $( $field_name:ident : $field_type:ty ),* $(,)?} )? $( = $disc:expr )?
             ),* $(,)?
         }
     ) => {
@@ -47,13 +46,13 @@ macro_rules! padded_enum {
         $(#[$meta])*
         $vis enum $Original {
             $(
-                $Variant $( ( $($field_type),* ) )?  $( = $disc )?,
+                $Variant $( { $($field_name: $field_type),* } )?  $( = $disc )?,
             )*
         }
 
         // We use the `paste` crate to concatenate names (Original + Padded)
-        paste::paste! {
-            
+        $crate::paste! {
+
             // ---------------------------------------------------------
             // 2. Internal Packed Structs
             // ---------------------------------------------------------
@@ -63,11 +62,10 @@ macro_rules! padded_enum {
             $(
                 #[repr(C, packed)]
                 #[derive(
-                    zerocopy_derive::IntoBytes, 
-                    zerocopy_derive::FromBytes, 
-                    zerocopy_derive::Immutable, 
-                    zerocopy_derive::KnownLayout, 
-                    Clone, Copy, Debug, Default, PartialEq
+                    zerocopy_derive::IntoBytes,
+                    zerocopy_derive::FromBytes,
+                    zerocopy_derive::Immutable,
+                    zerocopy_derive::KnownLayout
                 )]
                 #[allow(non_camel_case_types)]
                 $vis struct [<$Original Padded _ $Variant _Body>] {
@@ -81,11 +79,11 @@ macro_rules! padded_enum {
             // ---------------------------------------------------------
             #[repr(u8)]
             #[derive(
-                zerocopy_derive::IntoBytes, 
-                zerocopy_derive::TryFromBytes, 
-                zerocopy_derive::Immutable, 
-                zerocopy_derive::KnownLayout, 
-                Clone, Copy, Debug
+                zerocopy_derive::IntoBytes,
+                zerocopy_derive::TryFromBytes,
+                zerocopy_derive::Immutable,
+                zerocopy_derive::KnownLayout
+                
             )]
             $vis enum [<$Original Padded>] {
                 $(
@@ -100,7 +98,7 @@ macro_rules! padded_enum {
                 fn from(orig: $Original) -> Self {
                     match orig {
                         $(
-                            $Original::$Variant $( ( $($field_name),* ) )? => {
+                            $Original::$Variant $( { $($field_name),* } )? => {
                                 [<$Original Padded>]::$Variant(
                                     [<$Original Padded _ $Variant _Body>] {
                                         $($( $field_name, )*)?
@@ -122,7 +120,7 @@ macro_rules! padded_enum {
                         $(
                             #[allow(unused_variables)]
                             [<$Original Padded>]::$Variant(body) => {
-                                $Original::$Variant $( ( $( body.$field_name ),* ) )?
+                                $Original::$Variant $( { $( $field_name: body.$field_name ),* } )?
                             }
                         )*
                     }
@@ -144,23 +142,24 @@ macro_rules! padded_enum {
 // ---------------------------------------------------------
 #[cfg(test)]
 mod tests {
-    use zerocopy::IntoBytes;
+    use zerocopy::{IntoBytes, TryFromBytes};
+    use super::*;
 
     // Define a test enum using the macro
     padded_enum! {
         (size = 5) // Tag(1) + MaxPayload(4)
-    
+
         #[derive(Debug, Clone, Copy, PartialEq)]
         #[repr(u8)]
         pub enum MyProto {
             // 1 + 4 + 0 = 5
             #[pad(0)]
-            Move{dist: u32},
-            
+            Move{dist: u32,},
+
             // 1 + 1 + 3 = 5
             #[pad(3)]
             Jump{height: u8},
-            
+
             // 1 + 0 + 4 = 5
             #[pad(4)]
             Stop
@@ -174,25 +173,26 @@ mod tests {
 
     #[test]
     fn test_move_variant() {
-        let original = MyProto::Move(0xAABBCCDD);
+        let original = MyProto::Move { dist: 0xAABBCCDD };
         let padded: MyProtoPadded = original.into();
-        
+
         // Check bytes: Tag (0) + u32 (DD CC BB AA) in little endian
         let bytes = padded.as_bytes();
         // Note: Tag values depend on declaration order. Move=0
-        assert_eq!(bytes[0], 0); 
+        assert_eq!(bytes[0], 0);
         assert_eq!(&bytes[1..5], &[0xDD, 0xCC, 0xBB, 0xAA]);
-        
+
+        let padded_back: MyProtoPadded = MyProtoPadded::try_read_from_bytes(&bytes).unwrap();
         // Round trip
-        let back: MyProto = padded.into();
+        let back: MyProto = padded_back.into();
         assert_eq!(original, back);
     }
 
     #[test]
     fn test_jump_variant_padding() {
-        let original = MyProto::Jump(0xFF);
+        let original = MyProto::Jump { height: 0xFF };
         let padded: MyProtoPadded = original.into();
-        
+
         let bytes = padded.as_bytes();
         // Tag=1, Data=FF, Pad=00 00 00
         assert_eq!(bytes[0], 1);
@@ -210,7 +210,7 @@ mod tests {
     fn test_stop_variant_padding() {
         let original = MyProto::Stop;
         let padded: MyProtoPadded = original.into();
-        
+
         let bytes = padded.as_bytes();
         // Tag=2, Pad=00 00 00 00
         assert_eq!(bytes[0], 2);
