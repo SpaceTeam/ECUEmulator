@@ -1,18 +1,20 @@
-[GenericChannel]
-id = 0
-
+[General]
+can_id = 0
+    [GenericChannel]
+    Variables = [
+        {id=1, value = 5}
+    ]
+    
+    
     [GenericChannel.GenericReqData]
     channel_mask = "0b11111111111"
     data = "0x12387168743618723648761283648"
-
+    
     [GenericChannel.GenericRequestNodeInfo]
     firmware_version = "0x0110101"
     channel_mask = "0b11111111111"
     channel_type = "0x01"
+    data = "0xFFEEAABBCCDDEEFF"
 
     [GenericChannel.GenericReqFlashClear]
     status = 1
-
-    [GenericChannel.variables]
-    var1 = {id=1, value = 5}
-

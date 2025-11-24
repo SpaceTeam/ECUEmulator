@@ -37,20 +37,20 @@ fn main() {
             continue;
         };
 
-        let response = handle_message(&msg, &mut config);
+        //let response = handle_message(&msg, &mut config);
 
-        match response {
-            None => {}
-            Some(msg) => {
-                //TODO id should of course be the other way around/adressing the main server
-                match send_message(id, msg, &mut socket) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        println!("Error during sending message: {}", err);
-                        continue;
-                    }
-                }
-            }
-        }
+        // match response {
+        //     None => {}
+        //     Some(msg) => {
+        //         //TODO id should of course be the other way around/adressing the main server
+        //         match send_message(id, msg, &mut socket) {
+        //             Ok(_) => {}
+        //             Err(err) => {
+        //                 println!("Error during sending message: {}", err);
+        //                 continue;
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
