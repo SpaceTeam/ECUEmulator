@@ -24,7 +24,7 @@
 /// }
 ///
 /// // Usage
-/// let cmd = Command::Move(42);
+/// let cmd = Command::Move { val: 42 };
 /// let wired: CommandPadded = cmd.into();
 /// let bytes = wired.as_bytes();
 /// ```
@@ -83,11 +83,11 @@ macro_rules! padded_enum {
                 zerocopy_derive::TryFromBytes,
                 zerocopy_derive::Immutable,
                 zerocopy_derive::KnownLayout
-                
+
             )]
             $vis enum [<$Original Padded>] {
                 $(
-                    $Variant( [<$Original Padded _ $Variant _Body>] ),
+                    $Variant( [<$Original Padded _ $Variant _Body>] ) $( = $disc )?,
                 )*
             }
 
@@ -142,8 +142,8 @@ macro_rules! padded_enum {
 // ---------------------------------------------------------
 #[cfg(test)]
 mod tests {
-    use zerocopy::{IntoBytes, TryFromBytes};
     use super::*;
+    use zerocopy::{IntoBytes, TryFromBytes};
 
     // Define a test enum using the macro
     padded_enum! {
@@ -218,6 +218,59 @@ mod tests {
 
         // Round trip
         let back: MyProto = padded.into();
+        assert_eq!(original, back);
+    }
+
+    // Test enum with discriminants set via constants
+    const CMD_PING: u8 = 10;
+    const CMD_PONG: u8 = 20;
+    const CMD_DATA: u8 = 30;
+
+    padded_enum! {
+        (size = 5)
+
+        #[derive(Debug, Clone, Copy, PartialEq)]
+        #[repr(u8)]
+        pub enum ConstDiscriminant {
+            #[pad(4)]
+            Ping = CMD_PING,
+
+            #[pad(4)]
+            Pong = CMD_PONG,
+
+            #[pad(0)]
+            Data { value: u32 } = CMD_DATA,
+        }
+    }
+
+    #[test]
+    fn test_constant_discriminants() {
+        // Verify discriminants are set correctly via constants
+        let ping = ConstDiscriminant::Ping;
+        let padded: ConstDiscriminantPadded = ping.into();
+        let bytes = padded.as_bytes();
+        assert_eq!(bytes[0], CMD_PING);
+
+        let pong = ConstDiscriminant::Pong;
+        let padded: ConstDiscriminantPadded = pong.into();
+        let bytes = padded.as_bytes();
+        assert_eq!(bytes[0], CMD_PONG);
+
+        let data = ConstDiscriminant::Data { value: 0x12345678 };
+        let padded: ConstDiscriminantPadded = data.into();
+        let bytes = padded.as_bytes();
+        assert_eq!(bytes[0], CMD_DATA);
+        assert_eq!(&bytes[1..5], &[0x78, 0x56, 0x34, 0x12]); // little endian
+    }
+
+    #[test]
+    fn test_constant_discriminants_round_trip() {
+        let original = ConstDiscriminant::Data { value: 0xDEADBEEF };
+        let padded: ConstDiscriminantPadded = original.into();
+        let bytes = padded.as_bytes();
+
+        let padded_back = ConstDiscriminantPadded::try_read_from_bytes(&bytes).unwrap();
+        let back: ConstDiscriminant = padded_back.into();
         assert_eq!(original, back);
     }
 }
