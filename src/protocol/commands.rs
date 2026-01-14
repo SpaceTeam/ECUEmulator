@@ -2,7 +2,7 @@ use ecu_emulator_macros_derive::EnumDiscriminate;
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[derive(Debug, EnumDiscriminate)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum CommonCommands {
     CommonReqResetSettings = CommonCommandsDiscriminant::CommonReqResetSettings.discriminant(), // NO payload
     CommonResResetSettings = CommonCommandsDiscriminant::CommonResResetSettings.discriminant(), // NO payload
@@ -24,7 +24,7 @@ pub enum CommonCommands {
 }
 
 #[derive(Debug, EnumDiscriminate)]
-#[repr(isize)]
+#[repr(u8)]
 pub enum CommonCommandsDiscriminant {
     CommonReqResetSettings = 0,
     CommonResResetSettings = 1,
@@ -37,13 +37,13 @@ pub enum CommonCommandsDiscriminant {
     CommonTotalCmds = 8,
 }
 
-#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq)]
+#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq, Clone)]
 #[repr(C, packed)]
 pub struct SetMsgPayload {
     pub variable_id: u8,
     pub value: u32,
 }
-#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq)]
+#[derive(Debug, FromBytes, IntoBytes, Immutable, KnownLayout, PartialEq, Clone)]
 #[repr(C, packed)]
 pub struct GetMsgPayload {
     pub variable_id: u8,

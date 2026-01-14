@@ -42,7 +42,7 @@ pub enum MessageSpecialCommand {
     AbortSpecialCmd,
     ClockSyncSpecialCmd, // DIR = MASTER2NODE_DIRECTION
     //TODO: This is from the legacy definition, but it doens't work in rust. Remove in future.
-    //ErrorSpecialCmd = ClockSyncSpecialCmd as isize, DIR = NODE2MASTER_DIRECTION
+    //ErrorSpecialCmd = ClockSyncSpecialCmd as u8, DIR = NODE2MASTER_DIRECTION
     InfoSpecialCmd,
     StandardSpecialCmd,
 }
