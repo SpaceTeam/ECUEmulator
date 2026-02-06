@@ -1,5 +1,5 @@
 use crate::can_manager::send_frame;
-use crate::protocol::message::{CanMessage, CanMessagePadded};
+use crate::protocol::can_message::{CanMessage, CanMessagePadded};
 use crate::protocol::{CanMessageFrame, CanMessageId};
 use anyhow::anyhow;
 use socketcan::CanFdSocket;
@@ -52,7 +52,7 @@ pub fn send_message(
 
 #[cfg(test)]
 mod tests {
-    use crate::protocol::message::CanMessage;
+    use crate::protocol::can_message::CanMessage;
     use crate::protocol::message_conversion::MessageTrait;
     use crate::protocol::payloads;
     use crate::protocol::CanMessageFrame;
