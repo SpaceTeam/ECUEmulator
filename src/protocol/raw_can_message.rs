@@ -1,66 +1,31 @@
-use modular_bitfield::prelude::{B5, B6};
+use modular_bitfield::prelude::B5;
 use modular_bitfield::private::static_assertions;
 use modular_bitfield::{bitfield, Specifier};
 use std::mem::size_of;
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-#[derive(Specifier, Debug)]
-pub enum CanMessageDirection {
-    MasterToNode,
-    NodeToMaster,
+#[derive(Specifier, Debug, PartialEq, Eq)]
+pub enum CanMessagePriority {
+    Low = 0,
+    High = 1,
 }
 
-#[derive(Specifier, Debug)]
-pub enum CanMessagePriority {
-    UrgentPriority,
-    HighPriority,
-    StandardPriority,
-    LowPriority,
-}
 #[bitfield]
-#[repr(u16)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[repr(u16)]
 pub struct CanMessageId {
-    pub direction: CanMessageDirection,
-    pub node_id: B6,
-    pub special_cmd: MessageSpecialCommand,
+    pub receiver_id: B5,
+    pub sender_id: B5,
     pub priority: CanMessagePriority,
     #[skip]
     __: B5,
 }
-#[derive(Specifier, Debug, Clone, Copy, PartialEq)]
-#[repr(i8)]
-pub enum CanMessageBufferType {
-    DirectBuffer,
-    AbsoluteBuffer,
-    RelativeBuffer,
-    ReservedBuffer,
-}
 
-#[derive(Specifier, Debug)]
-pub enum MessageSpecialCommand {
-    AbortSpecialCmd,
-    ClockSyncSpecialCmd, // DIR = MASTER2NODE_DIRECTION
-    //TODO: This is from the legacy definition, but it doens't work in rust. Remove in future.
-    //ErrorSpecialCmd = ClockSyncSpecialCmd as u8, DIR = NODE2MASTER_DIRECTION
-    InfoSpecialCmd,
-    StandardSpecialCmd,
-}
-
-#[bitfield]
-#[derive(IntoBytes, FromBytes, KnownLayout, Debug, Copy, Clone, Immutable)]
-#[repr(u8)]
-pub struct CanMessageDataInfo {
-    pub channel_id: B6,
-    pub can_message_buffer: CanMessageBufferType,
-}
-
-#[derive(IntoBytes, FromBytes, KnownLayout, Debug, Immutable)]
+#[derive(Debug, IntoBytes, FromBytes, Immutable, KnownLayout)]
 #[repr(C, packed)]
-pub struct CanMessageData {
-    pub data_info: CanMessageDataInfo,
-    pub command_id: u8,
-    pub data: [u8; 62],
+pub struct CanMessageFrame {
+    pub message_type: u8,
+    pub data: [u8; 63],
 }
 
-static_assertions::const_assert_eq!(size_of::<CanMessageData>(), 64);
+static_assertions::const_assert_eq!(size_of::<CanMessageFrame>(), 64);
