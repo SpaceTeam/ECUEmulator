@@ -23,6 +23,13 @@ pub enum ParameterSetStatus {
     NodeToNodeModification = 3, // The parameter was modified by another node
 }
 
+#[derive(Specifier, Debug, Copy, Clone, PartialEq, Eq, Immutable, TryFromBytes, IntoBytes)]
+#[repr(u8)]
+pub enum ParameterLockStatus {
+    Unlocked = 0,
+    Locked = 1,
+}
+
 #[derive(Debug, Clone, FromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct NodeInfoResPayload {
@@ -111,8 +118,8 @@ pub struct FieldIDLookupResPayload {
 #[derive(Debug, Clone, TryFromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct ParameterSetLockPayload {
-    pub parameter_id: u8,     // Parameter identifier to lock
-    pub parameter_lock: bool, // Lock status(0=unlocked, 1=locked)
+    pub parameter_id: u8,                    // Parameter identifier to lock
+    pub parameter_lock: ParameterLockStatus, // Lock status (0=unlocked, 1=locked)
 }
 
 static_assertions::const_assert_eq!(size_of::<NodeInfoResPayload>(), 63);

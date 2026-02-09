@@ -186,7 +186,7 @@ mod tests {
     fn test_parameter_set_lock_req() {
         let payload = payloads::ParameterSetLockPayload {
             parameter_id: 12,
-            parameter_lock: true,
+            parameter_lock: payloads::ParameterLockStatus::Locked,
         };
         let msg = CanMessage::ParameterSetLockReq { payload };
         test_round_trip(msg);
@@ -196,7 +196,7 @@ mod tests {
     fn test_parameter_set_lock_confirmation() {
         let payload = payloads::ParameterSetLockPayload {
             parameter_id: 13,
-            parameter_lock: false,
+            parameter_lock: payloads::ParameterLockStatus::Unlocked,
         };
         let msg = CanMessage::ParameterSetLockConfirmation { payload };
         test_round_trip(msg);
