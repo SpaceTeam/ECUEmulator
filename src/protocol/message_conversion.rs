@@ -31,34 +31,23 @@ impl From<CanMessage> for CanMessageFrame {
     }
 }
 
-pub trait MessageTrait {
-    fn as_can_message_frame(&self) -> CanMessageFrame;
-}
-
-impl MessageTrait for CanMessage {
-    fn as_can_message_frame(&self) -> CanMessageFrame {
-        self.clone().into()
-    }
-}
-
 pub fn send_message(
     id: CanMessageId,
     msg: CanMessage,
     socket: &mut CanFdSocket,
 ) -> Result<(), crate::can_manager::errors::SendFrameError> {
-    let msg_frame: CanMessageFrame = msg.as_can_message_frame();
+    let msg_frame: CanMessageFrame = msg.into();
     send_frame(socket, id, msg_frame)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::protocol::can_message::CanMessage;
-    use crate::protocol::message_conversion::MessageTrait;
     use crate::protocol::payloads;
     use crate::protocol::CanMessageFrame;
 
     fn test_round_trip(msg: CanMessage) {
-        let can_data: CanMessageFrame = msg.as_can_message_frame();
+        let can_data: CanMessageFrame = msg.clone().into();
         let msg_back: CanMessage = can_data
             .try_into()
             .expect("Failed to convert back to Command");
