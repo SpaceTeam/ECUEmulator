@@ -2,7 +2,7 @@ use crate::config::state_storage::StateStorage;
 use crate::protocol::payloads;
 use crate::protocol::CanMessage;
 
-pub fn handle_generic_command(msg: &CanMessage, state: &mut StateStorage) -> Option<CanMessage> {
+pub fn handle_message(msg: &CanMessage, state: &mut StateStorage) -> Option<CanMessage> {
     match msg {
         CanMessage::NodeInfoReq => Some(CanMessage::NodeInfoAnnouncement {
             payload: payloads::NodeInfoResPayload {
