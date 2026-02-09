@@ -46,6 +46,7 @@ pub struct StatusPayload {
     pub msg: [u8; 63], // Status message text
 }
 
+// Important: only derives TryFromBytes because enum CanDataType doesn't cover all possible enum variants for u8
 #[derive(Debug, Clone, TryFromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct FieldRegistrationPayload {
@@ -81,6 +82,7 @@ pub struct ParameterSetReqPayload {
     pub value: [u8; 61],  // New value (type depends on parameter)
 }
 
+// Important: only derives TryFromBytes because enum ParameterSetStatus doesn't cover all possible enum variants for u8
 #[derive(Debug, Clone, TryFromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct ParameterSetConfirmationPayload {
@@ -108,6 +110,7 @@ pub struct FieldIDLookupReqPayload {
     pub field_name: [u8; 61], // Field name
 }
 
+// Important: only derives TryFromBytes because enum CanDataType doesn't cover all possible enum variants for u8
 #[derive(Debug, Clone, TryFromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct FieldIDLookupResPayload {
@@ -115,6 +118,7 @@ pub struct FieldIDLookupResPayload {
     pub field_type: CanDataType, // Field Datatype
 }
 
+// Important: only derives TryFromBytes because bool doesn't derive FromBytes
 #[derive(Debug, Clone, TryFromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct ParameterSetLockPayload {
