@@ -4,7 +4,7 @@ mod message_handling;
 mod protocol;
 
 use crate::message_handling::{handle_message, parse_can_message};
-use crate::protocol::message::send_message;
+use crate::protocol::message_conversion::send_message;
 use clap::Parser;
 use socketcan::{CanFdSocket, Socket};
 use std::env;
