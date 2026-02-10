@@ -63,7 +63,7 @@ macro_rules! padded_enum {
                 #[repr(C, packed)]
                 #[derive(
                     zerocopy_derive::IntoBytes,
-                    zerocopy_derive::FromBytes,
+                    zerocopy_derive::TryFromBytes,
                     zerocopy_derive::Immutable,
                     zerocopy_derive::KnownLayout
                 )]

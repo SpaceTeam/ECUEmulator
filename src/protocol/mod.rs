@@ -1,9 +1,8 @@
-pub mod channels;
-pub mod commands;
-pub mod message;
+pub mod can_message;
+pub mod message_conversion;
+pub mod payloads;
 pub mod raw_can_message;
 
-pub use raw_can_message::CanMessageBufferType;
-pub use raw_can_message::CanMessageData;
-pub use raw_can_message::CanMessageDataInfo;
+pub use can_message::CanMessage;
+pub use raw_can_message::CanMessageFrame;
 pub use raw_can_message::CanMessageId;
