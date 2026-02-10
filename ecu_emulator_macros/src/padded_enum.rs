@@ -25,8 +25,9 @@
 ///
 /// // Usage
 /// let cmd = Command::Move { val: 42 };
-/// let wired: CommandPadded = cmd.into();
-/// let bytes = wired.as_bytes();
+/// let mut buffer = [0u8; 5];
+/// let bytes = cmd.to_bytes(&mut buffer);
+/// let cmd = Command::from_bytes(bytes).unwrap();
 /// ```
 #[macro_export]
 macro_rules! padded_enum {
@@ -83,7 +84,6 @@ macro_rules! padded_enum {
                 zerocopy_derive::TryFromBytes,
                 zerocopy_derive::Immutable,
                 zerocopy_derive::KnownLayout
-
             )]
             $vis enum [<$Original Padded>] {
                 $(
@@ -92,7 +92,44 @@ macro_rules! padded_enum {
             }
 
             // ---------------------------------------------------------
-            // 4. Conversion: Original -> Padded
+            // 4. Direct conversions between Original and bytes
+            // ---------------------------------------------------------
+            impl $Original {
+                /// Serializes the enum to a vector of bytes, omitting the padding.
+                #[allow(unused)]
+                pub fn to_bytes<'a>(&self, buf: &'a mut [u8; $size]) -> &'a [u8] {
+                    match self {
+                        $(
+                            $Original::$Variant $( { $($field_name),* } )? => {
+                                // Construct the padded body struct
+                                let padded_body = [<$Original Padded _ $Variant _Body>] {
+                                    $($( $field_name: $field_name.clone(), )*)?
+                                    _pad: [0u8; $pad],
+                                };
+                                let padded_enum = [<$Original Padded>]::$Variant(padded_body);
+                                let bytes = ::zerocopy::IntoBytes::as_bytes(&padded_enum);
+                                buf.copy_from_slice(bytes);
+                                &buf[0..(bytes.len() - $pad)]
+                            }
+                        )*
+                    }
+                }
+
+                /// Deserializes from a byte slice, padding with zeros if necessary.
+                #[allow(unused)]
+                pub fn from_bytes(bytes: &[u8]) -> Result<Self, ::std::string::String> {
+                    let mut buf = [0u8; $size];
+                    let len = ::std::cmp::min(bytes.len(), $size);
+                    buf[0..len].copy_from_slice(&bytes[0..len]);
+
+                    let padded = <[<$Original Padded>] as ::zerocopy::TryFromBytes>::try_read_from_bytes(&buf)
+                        .map_err(|e| ::std::format!("{:?}", e))?;
+                    Ok(padded.into())
+                }
+            }
+
+            // ---------------------------------------------------------
+            // 5. Conversion: Original -> Padded
             // ---------------------------------------------------------
             impl From<$Original> for [<$Original Padded>] {
                 fn from(orig: $Original) -> Self {
@@ -112,7 +149,7 @@ macro_rules! padded_enum {
             }
 
             // ---------------------------------------------------------
-            // 5. Conversion: Padded -> Original
+            // 6. Conversion: Padded -> Original
             // ---------------------------------------------------------
             impl From<[<$Original Padded>]> for $Original {
                 fn from(padded: [<$Original Padded>]) -> Self {
@@ -128,7 +165,7 @@ macro_rules! padded_enum {
             }
 
             // ---------------------------------------------------------
-            // 6. Size Check (Type Mismatch Trick)
+            // 7. Size Check (Type Mismatch Trick)
             // ---------------------------------------------------------
             // If the size doesn't match, this triggers a compiler error:
             // "Expected array of size X, found array of size Y"
@@ -142,7 +179,6 @@ macro_rules! padded_enum {
 // ---------------------------------------------------------
 #[cfg(test)]
 mod tests {
-    use super::*;
     use zerocopy::{IntoBytes, TryFromBytes};
 
     // Define a test enum using the macro
@@ -273,4 +309,43 @@ mod tests {
         let back: ConstDiscriminant = padded_back.into();
         assert_eq!(original, back);
     }
+
+    #[test]
+    fn test_to_from_bytes_for_original() {
+        let mut buffer = [0u8; 5];
+        let original = MyProto::Move { dist: 0xA1B2C3D4 };
+        let bytes = original.to_bytes(&mut buffer);
+        // Tag(0) + dist(4) = 5. padding is 0.
+        assert_eq!(bytes.len(), 5);
+        assert_eq!(bytes[0], 0);
+        assert_eq!(&bytes[1..5], &[0xD4, 0xC3, 0xB2, 0xA1]);
+
+        let recovered = MyProto::from_bytes(&bytes).unwrap();
+        assert_eq!(original, recovered);
+
+        // Test padding logic
+        let jump = MyProto::Jump { height: 0x77 };
+        let bytes_jump = jump.to_bytes(&mut buffer);
+        // Tag(1) + height(1) + pad(3) = 5.
+        // Stripped bytes = 5 - 3 = 2.
+        assert_eq!(bytes_jump.len(), 2);
+        assert_eq!(bytes_jump, vec![1, 0x77]);
+
+        let recovered_jump = MyProto::from_bytes(&bytes_jump).unwrap();
+        assert_eq!(jump, recovered_jump);
+
+        // Test undersized input
+        let incomplete = vec![1, 0x77]; // implicit padding
+        let recovered = MyProto::from_bytes(&incomplete).unwrap();
+        assert_eq!(jump, recovered);
+        
+        // Test empty input (should be padded with 0 -> Tag=0 -> Move{val:0})
+        let empty: Vec<u8> = vec![];
+        let recovered_empty = MyProto::from_bytes(&empty).unwrap();
+        match recovered_empty {
+             MyProto::Move { dist } => assert_eq!(dist, 0),
+             _ => panic!("Expected Move(0)"),
+        }
+    }
 }
+
