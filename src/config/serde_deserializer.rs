@@ -1,6 +1,57 @@
+use crate::config::config_representation::{Parameter, Variable};
 use num_bigint::BigUint;
 use num_traits::{FromPrimitive, ToPrimitive};
 use serde::de::Error;
+use serde::{Deserialize, Deserializer};
+use std::collections::HashMap;
+
+pub fn deserialize_value_or_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum ValueOrBool {
+        U32Value(#[serde(deserialize_with = "deserialize_prefixed_u32")] u32),
+        BoolValue(bool),
+    }
+
+    let value = ValueOrBool::deserialize(deserializer)?;
+    match value {
+        ValueOrBool::U32Value(v) => Ok(v),
+        ValueOrBool::BoolValue(b) => Ok(if b { 1 } else { 0 }),
+    }
+}
+
+pub fn deserialize_variables<'de, D>(deserializer: D) -> Result<Option<Vec<Variable>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let map: Option<HashMap<String, Variable>> = Option::deserialize(deserializer)?;
+    Ok(map.map(|m| {
+        m.into_iter()
+            .map(|(name, mut var)| {
+                var.name = name;
+                var
+            })
+            .collect()
+    }))
+}
+
+pub fn deserialize_parameters<'de, D>(deserializer: D) -> Result<Option<Vec<Parameter>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let map: Option<HashMap<String, Parameter>> = Option::deserialize(deserializer)?;
+    Ok(map.map(|m| {
+        m.into_iter()
+            .map(|(name, mut param)| {
+                param.name = name;
+                param
+            })
+            .collect()
+    }))
+}
 
 fn parse_prefixed_biguint(s: &str) -> Result<BigUint, String> {
     let s = s.replace('_', "");
