@@ -1,9 +1,29 @@
-use crate::config::config_representation::{Parameter, Variable};
+use crate::config::config_representation::{Parameter, TelemetryValue};
 use num_bigint::BigUint;
 use num_traits::{FromPrimitive, ToPrimitive};
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
+
+pub mod max_bytes {
+    use super::*;
+    use serde::de;
+
+    pub fn deserialize<'de, const MAX: usize, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        if s.len() > MAX {
+            Err(de::Error::custom(format!(
+                "string length {} exceeds maximum of {MAX} bytes",
+                s.len()
+            )))
+        } else {
+            Ok(s)
+        }
+    }
+}
 
 pub fn deserialize_value_or_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where
@@ -23,11 +43,13 @@ where
     }
 }
 
-pub fn deserialize_variables<'de, D>(deserializer: D) -> Result<Option<Vec<Variable>>, D::Error>
+pub fn deserialize_telemetry<'de, D>(
+    deserializer: D,
+) -> Result<Option<Vec<TelemetryValue>>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let map: Option<HashMap<String, Variable>> = Option::deserialize(deserializer)?;
+    let map: Option<HashMap<String, TelemetryValue>> = Option::deserialize(deserializer)?;
     Ok(map.map(|m| {
         m.into_iter()
             .map(|(name, mut var)| {

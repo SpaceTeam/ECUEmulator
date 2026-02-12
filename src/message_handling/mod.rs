@@ -1,13 +1,13 @@
 mod message_handler;
 
-use crate::config::state_storage::StateStorage;
 use anyhow::{anyhow, Result};
 use liquidcan::{CanMessage, CanMessageFrame, CanMessageId};
 use socketcan::{CanAnyFrame, EmbeddedFrame, Id};
 use zerocopy::FromBytes;
+use crate::config::config_representation::EmulatorData;
 
-pub fn handle_message(msg: &CanMessage, state: &mut StateStorage) -> Option<CanMessage> {
-    message_handler::handle_message(msg, state)
+pub fn handle_message(msg: &CanMessage, emulator_data: &mut EmulatorData) -> Option<CanMessage> {
+    message_handler::handle_message(msg, emulator_data)
 }
 
 pub fn parse_can_message(frame: CanAnyFrame) -> Result<(CanMessageId, CanMessage)> {

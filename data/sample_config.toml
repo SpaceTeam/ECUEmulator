@@ -1,10 +1,13 @@
 node_id = 0
 frequency = 100
-[Variables]
-   [Variables.Variable1]
+firmware_hash = "0x123"
+liquid_hash = "0x123"
+device_name = "Emulator1"
+[TelemetryValues]
+   [TelemetryValues.tel1]
     value = 0x12345678
     datatype = "UInt32"
-    [Variables.Variable2]
+    [TelemetryValues.tel2]
     value = 0x12345678
     datatype = "UInt32"
 

@@ -1,8 +1,8 @@
-use crate::config::config_representation::EmulatorConfig;
+use crate::config::config_representation::EmulatorData;
 use anyhow::{Context, Result};
 use config::{Config, File};
 
-pub fn load_config(path: &str) -> Result<EmulatorConfig> {
+pub fn load_config(path: &str) -> Result<EmulatorData> {
     let config = Config::builder()
         .add_source(File::with_name(path))
         .build()?;
