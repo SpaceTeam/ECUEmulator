@@ -10,7 +10,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let res = config::config_loader::load_config((args[1]).as_ref());
     let Ok(mut config) = res else {
-        println!("Error loading config file");
+        eprintln!("Error loading config file: {:?}", res.err().unwrap());
         return;
     };
 

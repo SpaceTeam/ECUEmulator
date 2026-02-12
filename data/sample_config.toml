@@ -1,20 +1,20 @@
-[General]
-can_id = 0
-    [GenericChannel]
-    Variables = [
-        {id=1, value = 5}
-    ]
-    
-    
-    [GenericChannel.GenericReqData]
-    channel_mask = "0b11111111111"
-    data = "0x12387168743618723648761283648"
-    
-    [GenericChannel.GenericRequestNodeInfo]
-    firmware_version = "0x0110101"
-    channel_mask = "0b11111111111"
-    channel_type = "0x01"
-    data = "0xFFEEAABBCCDDEEFF"
+node_id = 0
+frequency = 100
+[Variables]
+   [Variables.Variable1]
+    value = 0x12345678
+    datatype = "UInt32"
+    [Variables.Variable2]
+    value = 0x12345678
+    datatype = "UInt32"
 
-    [GenericChannel.GenericReqFlashClear]
-    status = 1
+[Parameters]
+    [Parameters.Parameter1]
+     value = 0xABAC0
+     locked = false
+     datatype = "UInt32"
+
+     [Parameters.Parameter2]
+     value = false
+     datatype = "Boolean"
+     locked = true
