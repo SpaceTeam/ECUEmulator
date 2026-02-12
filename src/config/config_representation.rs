@@ -1,7 +1,8 @@
 use crate::config::serde_deserializer::deserialize_parameters;
 use crate::config::serde_deserializer::deserialize_prefixed_u32;
+use crate::config::serde_deserializer::deserialize_telemetry;
 use crate::config::serde_deserializer::deserialize_value_or_u32;
-use crate::config::serde_deserializer::deserialize_variables;
+use crate::config::serde_deserializer::max_bytes;
 use crate::protocol::payloads::CanDataType;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -19,7 +20,7 @@ enum DataType {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Variable {
+pub struct TelemetryValue {
     #[serde(skip)]
     pub name: String,
     #[serde(deserialize_with = "deserialize_prefixed_u32")]
@@ -40,12 +41,18 @@ pub struct Parameter {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct EmulatorConfig {
+pub struct EmulatorData {
     pub node_id: u32,
     pub frequency: u32,
-    #[serde(rename = "Variables")]
-    #[serde(deserialize_with = "deserialize_variables")]
-    pub variables: Option<Vec<Variable>>,
+    #[serde(deserialize_with = "deserialize_value_or_u32")]
+    pub firmware_hash: u32,
+    #[serde(deserialize_with = "deserialize_value_or_u32")]
+    pub liquid_hash: u32,
+    #[serde(deserialize_with = "max_bytes::deserialize::<53,_>")]
+    pub device_name: String,
+    #[serde(rename = "TelemetryValues")]
+    #[serde(deserialize_with = "deserialize_telemetry")]
+    pub telemetry_values: Option<Vec<TelemetryValue>>,
     #[serde(rename = "Parameters")]
     #[serde(deserialize_with = "deserialize_parameters")]
     pub parameters: Option<Vec<Parameter>>,
@@ -57,14 +64,16 @@ mod tests {
     use config::Config;
     #[test]
     pub fn test_load_config() {
-        let config = r#"
-node_id = 0
+        let config = r#"node_id = 0
 frequency = 100
-[Variables]
-   [Variables.Variable1]
+firmware_hash = "0x123"
+liquid_hash = "0x123"
+device_name = "Emulator1"
+[TelemetryValues]
+   [TelemetryValues.tel1]
     value = 0x12345678
     datatype = "UInt32"
-    [Variables.Variable2]
+    [TelemetryValues.tel2]
     value = 0x12345678
     datatype = "UInt32"
 
@@ -84,24 +93,26 @@ frequency = 100
             .build()
             .unwrap();
 
-        let emu_config: EmulatorConfig = config.try_deserialize().unwrap();
+        let emu_config: EmulatorData = config.try_deserialize().unwrap();
 
         assert_eq!(emu_config.node_id, 0);
         assert_eq!(emu_config.frequency, 100);
 
-        let variables = emu_config.variables.expect("Variables should be present");
-        assert_eq!(variables.len(), 2);
+        let telemetry_values = emu_config
+            .telemetry_values
+            .expect("Telemetry Values should be present");
+        assert_eq!(telemetry_values.len(), 2);
 
-        let var1 = variables
+        let var1 = telemetry_values
             .iter()
-            .find(|v| v.name == "Variable1")
-            .expect("Variable1 should exist");
+            .find(|v| v.name == "tel1")
+            .expect("tel1 should exist");
         assert_eq!(var1.value, 0x12345678);
 
-        let var2 = variables
+        let var2 = telemetry_values
             .iter()
-            .find(|v| v.name == "Variable2")
-            .expect("Variable2 should exist");
+            .find(|v| v.name == "tel2")
+            .expect("tel2 should exist");
         assert_eq!(var2.value, 0x12345678);
 
         let parameters = emu_config.parameters.expect("Parameters should be present");

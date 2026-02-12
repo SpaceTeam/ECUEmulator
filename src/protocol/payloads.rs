@@ -33,7 +33,7 @@ pub enum ParameterLockStatus {
 #[derive(Debug, Clone, FromBytes, IntoBytes, Immutable, PartialEq)]
 #[repr(C, packed)]
 pub struct NodeInfoResPayload {
-    pub tel_count: u8,         // Number of telemetryValues on this node
+    pub tel_count: u8,         // Number of telemetry_values on this node
     pub par_count: u8,         // Number of parameters on this node
     pub firmware_hash: u32,    // Hash of the firmware version
     pub liquid_hash: u32,      // Hash of the LiquidCan protocol version
