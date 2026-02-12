@@ -1,18 +1,23 @@
-[GenericChannel]
-id = 0
+node_id = 0
+frequency = 100
+firmware_hash = "0x123"
+liquid_hash = "0x123"
+device_name = "Emulator1"
+[TelemetryValues]
+   [TelemetryValues.tel1]
+    value = 0x12345678
+    datatype = "UInt32"
+    [TelemetryValues.tel2]
+    value = 0x12345678
+    datatype = "UInt32"
 
-    [GenericChannel.GenericReqData]
-    channel_mask = "0b11111111111"
-    data = "0x12387168743618723648761283648"
+[Parameters]
+    [Parameters.Parameter1]
+     value = 0xABAC0
+     locked = false
+     datatype = "UInt32"
 
-    [GenericChannel.GenericRequestNodeInfo]
-    firmware_version = "0x0110101"
-    channel_mask = "0b11111111111"
-    channel_type = "0x01"
-
-    [GenericChannel.GenericReqFlashClear]
-    status = 1
-
-    [GenericChannel.variables]
-    var1 = {id=1, value = 5}
-
+     [Parameters.Parameter2]
+     value = false
+     datatype = "Boolean"
+     locked = true

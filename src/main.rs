@@ -3,18 +3,15 @@ mod config;
 mod message_handling;
 mod protocol;
 
-use crate::message_handling::{handle_message, parse_can_message};
-use crate::protocol::message_conversion::send_message;
-use clap::Parser;
+use crate::message_handling::parse_can_message;
 use socketcan::{CanFdSocket, Socket};
 use std::env;
-use std::string::ToString;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut res = config::config_loader::load_config((&args[1]).as_ref());
     let Ok(mut config) = res else {
-        println!("Error loading config file");
+        eprintln!("Error loading config file: {:?}", res.err().unwrap());
         return;
     };
 
@@ -37,20 +34,20 @@ fn main() {
             continue;
         };
 
-        let response = handle_message(&msg, &mut config);
+        //let response = handle_message(&msg, &mut config);
 
-        match response {
-            None => {}
-            Some(msg) => {
-                //TODO id should of course be the other way around/adressing the main server
-                match send_message(id, msg, &mut socket) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        println!("Error during sending message: {}", err);
-                        continue;
-                    }
-                }
-            }
-        }
+        // match response {
+        //     None => {}
+        //     Some(msg) => {
+        //         //TODO id should of course be the other way around/adressing the main server
+        //         match send_message(id, msg, &mut socket) {
+        //             Ok(_) => {}
+        //             Err(err) => {
+        //                 println!("Error during sending message: {}", err);
+        //                 continue;
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
