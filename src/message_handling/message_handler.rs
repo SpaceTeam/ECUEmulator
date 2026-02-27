@@ -1,7 +1,7 @@
 use crate::config::state_storage::StateStorage;
 use liquidcan::payloads;
 use liquidcan::CanMessage;
-
+#[allow(unreachable_code)]
 pub fn handle_message(msg: &CanMessage, _state: &mut StateStorage) -> Option<CanMessage> {
     match msg {
         CanMessage::NodeInfoReq => Some(CanMessage::NodeInfoAnnouncement {
@@ -43,13 +43,13 @@ pub fn handle_message(msg: &CanMessage, _state: &mut StateStorage) -> Option<Can
             },
         }),
         CanMessage::FieldGetRes { payload: _payload } => None,
-        CanMessage::FieldIDLookupReq { payload } => Some(CanMessage::FieldIDLookupRes {
+        CanMessage::FieldIDLookupReq { payload: _payload } => Some(CanMessage::FieldIDLookupRes {
             payload: payloads::FieldIDLookupResPayload {
                 field_id: todo!(),
                 field_type: todo!(),
             },
         }),
-        CanMessage::FieldIDLookupRes { payload } => todo!(),
+        CanMessage::FieldIDLookupRes { payload: _payload } => todo!(),
         _ => None,
     }
 }

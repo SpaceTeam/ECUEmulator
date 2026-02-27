@@ -4,7 +4,6 @@ use socketcan::{CanAnyFrame, CanFdSocket, EmbeddedFrame, Socket};
 use zerocopy::IntoBytes;
 
 #[allow(dead_code)]
-
 pub fn open_socket(interface: &str) -> Result<CanFdSocket, std::io::Error> {
     CanFdSocket::open(interface)
 }
@@ -12,8 +11,8 @@ pub fn open_socket(interface: &str) -> Result<CanFdSocket, std::io::Error> {
 pub fn read_frame(socket: &mut CanFdSocket) -> Result<CanAnyFrame, std::io::Error> {
     socket.read_frame()
 }
-#[allow(dead_code)]
 
+#[allow(dead_code)]
 pub fn send_frame(
     socket: &mut CanFdSocket,
     can_message_id: CanMessageId,
@@ -28,8 +27,8 @@ pub fn send_frame(
     socket.write_frame_insist(&frame)?;
     Ok(())
 }
-#[allow(dead_code)]
 
+#[allow(dead_code)]
 fn send_raw_frame(
     socket: &mut CanFdSocket,
     frame: socketcan::CanFdFrame,

@@ -17,8 +17,8 @@ impl StateStorage {
     pub fn get(&self, key: String) -> Option<&Vec<u8>> {
         self.storage.get(&key)
     }
-    #[allow(dead_code)]
 
+    #[allow(dead_code)]
     pub fn get_u32_or_zero(&self, key: String) -> u32 {
         u32::from_le_bytes(self.get_value_slice_or_zeros::<4>(key))
     }
