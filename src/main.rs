@@ -10,7 +10,7 @@ use std::string::ToString;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let mut res = config::config_loader::load_config((&args[1]).as_ref());
+    let mut res = config::config_loader::load_config((args[1]).as_ref());
     let Ok(mut config) = res else {
         println!("Error loading config file");
         return;
