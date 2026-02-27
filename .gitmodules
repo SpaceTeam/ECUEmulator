@@ -1,0 +1,3 @@
+[submodule "LiquidCAN"]
+	path = LiquidCAN
+	url = git@github.com:SpaceTeam/LiquidCAN.git

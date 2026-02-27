@@ -1,6 +1,6 @@
 use crate::config::state_storage::StateStorage;
-use crate::protocol::payloads;
-use crate::protocol::CanMessage;
+use liquidcan::payloads;
+use liquidcan::CanMessage;
 
 pub fn handle_message(msg: &CanMessage, state: &mut StateStorage) -> Option<CanMessage> {
     match msg {

@@ -1,5 +1,5 @@
 use crate::can_manager::errors::SendFrameError;
-use crate::protocol::{CanMessageFrame, CanMessageId};
+use liquidcan::{CanMessageFrame, CanMessageId};
 use socketcan::{CanAnyFrame, CanFdSocket, EmbeddedFrame, Socket};
 use zerocopy::IntoBytes;
 
