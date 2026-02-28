@@ -35,4 +35,4 @@ The repository includes a CI script (`ci-rust.sh`) that runs all quality checks 
 ./ci-rust.sh fmt           # Check code formatting
 ./ci-rust.sh clippy        # Run clippy linter
 ```
-You can fix formatting or linter issues by adding the -fix suffix to the command. e.g: `.protocol_to_crate/ci-rust.sh clippy-fix`
+You can fix formatting or linter issues by adding the -fix suffix to the command. e.g: `./ci-rust.sh clippy-fix`
