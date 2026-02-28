@@ -1,8 +1,8 @@
 mod message_handler;
 
 use crate::config::state_storage::StateStorage;
-use crate::protocol::{CanMessage, CanMessageFrame, CanMessageId};
 use anyhow::{anyhow, Result};
+use liquidcan::{CanMessage, CanMessageFrame, CanMessageId};
 use socketcan::{CanAnyFrame, EmbeddedFrame, Id};
 use zerocopy::FromBytes;
 

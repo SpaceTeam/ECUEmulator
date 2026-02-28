@@ -1,8 +1,8 @@
 use crate::config::state_storage::StateStorage;
-use crate::protocol::payloads;
-use crate::protocol::CanMessage;
-
-pub fn handle_message(msg: &CanMessage, state: &mut StateStorage) -> Option<CanMessage> {
+use liquidcan::payloads;
+use liquidcan::CanMessage;
+#[allow(unreachable_code)]
+pub fn handle_message(msg: &CanMessage, _state: &mut StateStorage) -> Option<CanMessage> {
     match msg {
         CanMessage::NodeInfoReq => Some(CanMessage::NodeInfoAnnouncement {
             payload: payloads::NodeInfoResPayload {
@@ -18,36 +18,41 @@ pub fn handle_message(msg: &CanMessage, state: &mut StateStorage) -> Option<CanM
                 counter: payload.counter + 1,
             },
         }),
-        CanMessage::ParameterSetReq { payload } => Some(CanMessage::ParameterSetConfirmation {
-            payload: payloads::ParameterSetConfirmationPayload {
-                parameter_id: todo!(),
-                status: todo!(),
-                value: todo!(),
-            },
-        }),
-        CanMessage::ParameterSetConfirmation { payload } => None,
-        CanMessage::ParameterSetLockReq { payload } => {
-            Some(CanMessage::ParameterSetLockConfirmation {
-                payload: payloads::ParameterSetLockPayload {
+        CanMessage::ParameterSetReq { payload: _payload } => {
+            Some(CanMessage::ParameterSetConfirmation {
+                payload: payloads::ParameterSetConfirmationPayload {
                     parameter_id: todo!(),
-                    parameter_lock: todo!(),
+                    status: todo!(),
+                    value: todo!(),
                 },
             })
         }
-        CanMessage::FieldGetReq { payload } => Some(CanMessage::FieldGetRes {
+        CanMessage::ParameterSetConfirmation { payload: _payload } => None,
+        CanMessage::ParameterSetLockReq { payload: _payload } => {
+            Some(CanMessage::ParameterSetLockConfirmation {
+                payload: payloads::ParameterSetLockConfirmationPayload {
+                    parameter_id: todo!(),
+                    parameter_lock: todo!(),
+                    field_status: todo!(),
+                },
+            })
+        }
+        CanMessage::FieldGetReq { payload: _payload } => Some(CanMessage::FieldGetRes {
             payload: payloads::FieldGetResPayload {
                 field_id: todo!(),
+                field_status: todo!(),
                 value: todo!(),
             },
         }),
-        CanMessage::FieldGetRes { payload } => None,
-        CanMessage::FieldIDLookupReq { payload } => Some(CanMessage::FieldIDLookupRes {
+        CanMessage::FieldGetRes { payload: _payload } => None,
+        CanMessage::FieldIDLookupReq { payload: _payload } => Some(CanMessage::FieldIDLookupRes {
             payload: payloads::FieldIDLookupResPayload {
                 field_id: todo!(),
+                field_status: todo!(),
                 field_type: todo!(),
             },
         }),
-        CanMessage::FieldIDLookupRes { payload } => todo!(),
+        CanMessage::FieldIDLookupRes { payload: _payload } => todo!(),
         _ => None,
     }
 }

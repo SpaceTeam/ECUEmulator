@@ -1,9 +1,0 @@
-[package]
-name = "ecu_emulator_macros"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-paste = "1.0.15"
-zerocopy = "0.8.28"
-zerocopy-derive = "0.8.28"
