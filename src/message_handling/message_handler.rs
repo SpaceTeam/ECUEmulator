@@ -30,15 +30,17 @@ pub fn handle_message(msg: &CanMessage, _state: &mut StateStorage) -> Option<Can
         CanMessage::ParameterSetConfirmation { payload: _payload } => None,
         CanMessage::ParameterSetLockReq { payload: _payload } => {
             Some(CanMessage::ParameterSetLockConfirmation {
-                payload: payloads::ParameterSetLockPayload {
+                payload: payloads::ParameterSetLockConfirmationPayload {
                     parameter_id: todo!(),
                     parameter_lock: todo!(),
+                    field_status: todo!(),
                 },
             })
         }
         CanMessage::FieldGetReq { payload: _payload } => Some(CanMessage::FieldGetRes {
             payload: payloads::FieldGetResPayload {
                 field_id: todo!(),
+                field_status: todo!(),
                 value: todo!(),
             },
         }),
@@ -46,6 +48,7 @@ pub fn handle_message(msg: &CanMessage, _state: &mut StateStorage) -> Option<Can
         CanMessage::FieldIDLookupReq { payload: _payload } => Some(CanMessage::FieldIDLookupRes {
             payload: payloads::FieldIDLookupResPayload {
                 field_id: todo!(),
+                field_status: todo!(),
                 field_type: todo!(),
             },
         }),
