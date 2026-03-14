@@ -5,6 +5,7 @@ use ECUEmulator::message_handling::{build_status_message, handle_message, Status
 fn heartbeat_req_increments_counter() {
     let mut data = ECUEmulator::config::config_representation::EmulatorData {
         node_id: 1,
+        can_interface: "vcan0".to_string(),
         frequency: 100,
         firmware_hash: 0,
         liquid_hash: 0,

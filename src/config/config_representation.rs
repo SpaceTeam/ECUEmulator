@@ -43,6 +43,7 @@ pub struct Parameter {
 #[derive(Deserialize, Debug)]
 pub struct EmulatorData {
     pub node_id: u32,
+    pub can_interface: String,
     pub frequency: u32,
     #[serde(deserialize_with = "deserialize_value_or_u32")]
     pub firmware_hash: u32,
@@ -67,6 +68,7 @@ mod tests {
         let config = r#"node_id = 0
 frequency = 100
 firmware_hash = "0x123"
+can_interface = "vcan0"
 liquid_hash = "0x123"
 device_name = "Emulator1"
 [TelemetryValues]
@@ -97,6 +99,7 @@ device_name = "Emulator1"
 
         assert_eq!(emu_config.node_id, 0);
         assert_eq!(emu_config.frequency, 100);
+        assert_eq!(emu_config.can_interface, "vcan0");
 
         let telemetry_values = emu_config
             .telemetry_values

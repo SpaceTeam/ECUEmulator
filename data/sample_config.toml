@@ -1,5 +1,6 @@
 node_id = 0
 frequency = 100
+can_interface = "vcan0"
 firmware_hash = "0x123"
 liquid_hash = "0x123"
 device_name = "Emulator1"

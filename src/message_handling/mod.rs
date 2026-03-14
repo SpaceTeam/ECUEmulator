@@ -6,7 +6,10 @@ use liquidcan::{CanMessage, CanMessageId};
 use socketcan::{CanAnyFrame, EmbeddedFrame, Id};
 use zerocopy::FromBytes;
 
-pub use message_handler::{build_status_message, StatusMessageKind};
+pub use message_handler::{
+    build_status_message, build_telemetry_group_updates, registration_flow_messages,
+    StatusMessageKind,
+};
 
 pub fn handle_message(msg: &CanMessage, emulator_data: &mut EmulatorData) -> Vec<CanMessage> {
     message_handler::handle_message(msg, emulator_data)

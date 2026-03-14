@@ -29,6 +29,7 @@ pub fn emulator_data_with(
 ) -> EmulatorData {
     EmulatorData {
         node_id: 1,
+        can_interface: "vcan0".to_string(),
         frequency: 100,
         firmware_hash: 0x123,
         liquid_hash: 0x456,
