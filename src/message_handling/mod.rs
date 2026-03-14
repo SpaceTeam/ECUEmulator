@@ -1,12 +1,14 @@
 mod message_handler;
 
+use crate::config::config_representation::EmulatorData;
 use anyhow::{anyhow, Result};
-use liquidcan::{CanMessage, CanMessageFrame, CanMessageId};
+use liquidcan::{CanMessage, CanMessageId};
 use socketcan::{CanAnyFrame, EmbeddedFrame, Id};
 use zerocopy::FromBytes;
-use crate::config::config_representation::EmulatorData;
 
-pub fn handle_message(msg: &CanMessage, emulator_data: &mut EmulatorData) -> Option<CanMessage> {
+pub use message_handler::{build_status_message, StatusMessageKind};
+
+pub fn handle_message(msg: &CanMessage, emulator_data: &mut EmulatorData) -> Vec<CanMessage> {
     message_handler::handle_message(msg, emulator_data)
 }
 
@@ -18,11 +20,9 @@ pub fn parse_can_message(frame: CanAnyFrame) -> Result<(CanMessageId, CanMessage
         panic!("Only standard CAN IDs are supported");
     };
     let id = CanMessageId::from_bytes(raw_id.as_raw().to_le_bytes());
-    let data = CanMessageFrame::read_from_bytes(frame.data())
+    let message: CanMessage = frame
+        .try_into()
         .map_err(|e| anyhow!("Failed to parse CAN message data: {}", e))?;
-    println!("can msg data: {:?}", data);
-
-    let message: CanMessage = data.try_into()?;
 
     Ok((id, message))
 }

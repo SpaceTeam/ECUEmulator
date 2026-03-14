@@ -33,14 +33,11 @@ fn main() {
             continue;
         };
 
-        let response = handle_message(&msg, &mut config);
+        let responses = handle_message(&msg, &mut config);
 
-        match response {
-            None => {}
-            Some(msg) => {
-                //TODO id should of course be the other way around/adressing the main server
-                println!("Sending response: {:?}", msg);
-            }
+        for msg in responses {
+            //TODO id should of course be the other way around/adressing the main server
+            println!("Sending response: {:?}", msg);
         }
     }
 }

@@ -3,7 +3,7 @@ use crate::config::serde_deserializer::deserialize_prefixed_u32;
 use crate::config::serde_deserializer::deserialize_telemetry;
 use crate::config::serde_deserializer::deserialize_value_or_u32;
 use crate::config::serde_deserializer::max_bytes;
-use crate::protocol::payloads::CanDataType;
+use liquidcan::payloads::CanDataType;
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Deserialize, Serialize)]
