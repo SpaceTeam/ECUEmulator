@@ -4,8 +4,8 @@ use crate::config::config_representation::EmulatorData;
 use anyhow::{anyhow, Result};
 use liquidcan::{CanMessage, CanMessageId};
 use socketcan::{CanAnyFrame, EmbeddedFrame, Id};
-use zerocopy::FromBytes;
 
+#[allow(unused_imports)]
 pub use message_handler::{
     build_status_message, build_telemetry_group_updates, registration_flow_messages,
     StatusMessageKind,

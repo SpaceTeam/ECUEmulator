@@ -7,6 +7,7 @@ pub fn open_socket(interface: &str) -> Result<CanFdSocket, std::io::Error> {
     CanFdSocket::open(interface)
 }
 
+#[allow(dead_code)]
 pub fn read_frame(socket: &mut CanFdSocket) -> Result<CanAnyFrame, std::io::Error> {
     socket.read_frame()
 }

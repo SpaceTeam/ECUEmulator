@@ -1,6 +1,7 @@
 use liquidcan::payloads;
 use ECUEmulator::config::config_representation::{EmulatorData, Parameter, TelemetryValue};
 
+#[allow(dead_code)]
 pub fn telemetry(name: &str, value: u32, datatype: payloads::CanDataType) -> TelemetryValue {
     TelemetryValue {
         name: name.to_string(),
@@ -9,6 +10,7 @@ pub fn telemetry(name: &str, value: u32, datatype: payloads::CanDataType) -> Tel
     }
 }
 
+#[allow(dead_code)]
 pub fn parameter(
     name: &str,
     value: u32,
@@ -23,6 +25,7 @@ pub fn parameter(
     }
 }
 
+#[allow(dead_code)]
 pub fn emulator_data_with(
     telemetry_values: Option<Vec<TelemetryValue>>,
     parameters: Option<Vec<Parameter>>,

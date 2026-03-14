@@ -458,12 +458,14 @@ pub fn registration_flow_messages(emulator_data: &EmulatorData) -> Vec<CanMessag
     messages
 }
 
+#[allow(dead_code)]
 pub enum StatusMessageKind {
     Info,
     Warning,
     Error,
 }
 
+#[allow(dead_code)]
 pub fn build_status_message(kind: StatusMessageKind, message: &str) -> CanMessage {
     let msg = payloads::CanString::<63>::try_from(message)
         .expect("Status message too long (max 63 bytes)");

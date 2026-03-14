@@ -81,14 +81,14 @@ fn parse_prefixed_biguint(s: &str) -> Result<BigUint, String> {
         return Err(format!("negative values are not supported. Value: {}", s));
     }
     if s.starts_with("0x") || s.starts_with("0X") {
-        BigUint::parse_bytes(&s[2..].as_bytes(), 16).ok_or_else(|| {
+        BigUint::parse_bytes(&s.as_bytes()[2..], 16).ok_or_else(|| {
             format!(
                 "detected prefix '0x' but failed to parse value. Value: {}",
                 s
             )
         })
     } else if s.starts_with("0b") || s.starts_with("0B") {
-        BigUint::parse_bytes(&s[2..].as_bytes(), 2).ok_or_else(|| {
+        BigUint::parse_bytes(&s.as_bytes()[2..], 2).ok_or_else(|| {
             format!(
                 "detected prefix '0b' but failed to parse value. Value: {}",
                 s
@@ -103,6 +103,7 @@ fn parse_prefixed_biguint(s: &str) -> Result<BigUint, String> {
         })
     }
 }
+#[allow(dead_code)]
 pub fn deserialize_prefixed_biguint<'de, D>(deserializer: D) -> Result<BigUint, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -262,6 +263,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 pub fn deserialize_prefixed_u8<'de, D>(deserializer: D) -> Result<u8, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -277,6 +279,7 @@ where
         .and_then(|res| res)
 }
 #[cfg(test)]
+#[allow(dead_code)]
 mod tests {
     use super::*;
     #[test]
@@ -288,31 +291,31 @@ mod tests {
         }
 
         let toml_data = r#"
-            value = "0x1A2B3C"
-        "#;
+             value = "0x1A2B3C"
+         "#;
 
         let config: TestConfig = toml::from_str(toml_data).expect("Failed to deserialize TOML");
         assert_eq!(config.value, BigUint::from(0x1A2B3C_u64));
 
         let toml_data_bin = r#"
-            value = "0b1101"
-        "#;
+             value = "0b1101"
+         "#;
 
         let config_bin: TestConfig =
             toml::from_str(toml_data_bin).expect("Failed to deserialize TOML");
         assert_eq!(config_bin.value, BigUint::from(13_u64));
 
         let toml_data_dec = r#"
-            value = "123456789"
-        "#;
+             value = "123456789"
+         "#;
 
         let config_dec: TestConfig =
             toml::from_str(toml_data_dec).expect("Failed to deserialize TOML");
         assert_eq!(config_dec.value, BigUint::from(123456789_u64));
 
         let toml_data_num = r#"
-            value = 987654321
-        "#;
+             value = 987654321
+         "#;
         let config_num: TestConfig =
             toml::from_str(toml_data_num).expect("Failed to deserialize TOML");
         assert_eq!(config_num.value, BigUint::from(987654321_u64));
@@ -327,15 +330,15 @@ mod tests {
         }
 
         let toml_data_neg = r#"
-            value = "-12345"
-        "#;
+             value = "-12345"
+         "#;
 
         let result: Result<TestConfig, _> = toml::from_str(toml_data_neg);
         assert!(result.is_err(), "Expected error for negative value");
 
         let toml_data_float = r#"
-            value = 12.34
-        "#;
+             value = 12.34
+         "#;
 
         let result_float: Result<TestConfig, _> = toml::from_str(toml_data_float);
         assert!(
@@ -352,28 +355,28 @@ mod tests {
             value: u32,
         }
         let toml_data = r#"
-            value = "0x1A2B3C"
-        "#;
+             value = "0x1A2B3C"
+         "#;
         let config: TestConfig = toml::from_str(toml_data).expect("Failed to deserialize TOML");
         assert_eq!(config.value, 0x1A2B3C_u32);
 
         let toml_data_bin = r#"
-            value = "0b1101"
-        "#;
+             value = "0b1101"
+         "#;
         let config_bin: TestConfig =
             toml::from_str(toml_data_bin).expect("Failed to deserialize TOML");
         assert_eq!(config_bin.value, 13_u32);
 
         let toml_data_dec = r#"
-            value = "123456789"
-        "#;
+             value = "123456789"
+         "#;
         let config_dec: TestConfig =
             toml::from_str(toml_data_dec).expect("Failed to deserialize TOML");
         assert_eq!(config_dec.value, 123456789_u32);
 
         let toml_data_num = r#"
-            value = 987654321
-        "#;
+             value = 987654321
+         "#;
         let config_num: TestConfig =
             toml::from_str(toml_data_num).expect("Failed to deserialize TOML");
         assert_eq!(config_num.value, 987654321_u32);
@@ -387,15 +390,15 @@ mod tests {
         }
 
         let toml_data_neg = r#"
-            value = "-12345"
-        "#;
+             value = "-12345"
+         "#;
 
         let result: Result<TestConfig, _> = toml::from_str(toml_data_neg);
         assert!(result.is_err(), "Expected error for negative value");
 
         let toml_data_float = r#"
-            value = 12.34
-        "#;
+             value = 12.34
+         "#;
 
         let result_float: Result<TestConfig, _> = toml::from_str(toml_data_float);
         assert!(
@@ -404,8 +407,8 @@ mod tests {
         );
 
         let toml_data_overflow = r#"
-            value = "0x1FFFFFFFF"
-        "#;
+             value = "0x1FFFFFFFF"
+         "#;
 
         let result_overflow: Result<TestConfig, _> = toml::from_str(toml_data_overflow);
         assert!(
@@ -422,28 +425,28 @@ mod tests {
             value: u8,
         }
         let toml_data = r#"
-            value = "0x1A"
-        "#;
+             value = "0x1A"
+         "#;
         let config: TestConfig = toml::from_str(toml_data).expect("Failed to deserialize TOML");
         assert_eq!(config.value, 0x1A_u8);
 
         let toml_data_bin = r#"
-            value = "0b1101"
-        "#;
+             value = "0b1101"
+         "#;
         let config_bin: TestConfig =
             toml::from_str(toml_data_bin).expect("Failed to deserialize TOML");
         assert_eq!(config_bin.value, 13_u8);
 
         let toml_data_dec = r#"
-            value = "123"
-        "#;
+             value = "123"
+         "#;
         let config_dec: TestConfig =
             toml::from_str(toml_data_dec).expect("Failed to deserialize TOML");
         assert_eq!(config_dec.value, 123_u8);
 
         let toml_data_num = r#"
-            value = 200
-        "#;
+             value = 200
+         "#;
         let config_num: TestConfig =
             toml::from_str(toml_data_num).expect("Failed to deserialize TOML");
         assert_eq!(config_num.value, 200_u8);
@@ -457,15 +460,15 @@ mod tests {
         }
 
         let toml_data_neg = r#"
-            value = "-123"
-        "#;
+             value = "-123"
+         "#;
 
         let result: Result<TestConfig, _> = toml::from_str(toml_data_neg);
         assert!(result.is_err(), "Expected error for negative value");
 
         let toml_data_float = r#"
-            value = 12.34
-        "#;
+             value = 12.34
+         "#;
 
         let result_float: Result<TestConfig, _> = toml::from_str(toml_data_float);
         assert!(
@@ -474,8 +477,8 @@ mod tests {
         );
 
         let toml_data_overflow = r#"
-            value = "0x1FF"
-        "#;
+             value = "0x1FF"
+         "#;
 
         let result_overflow: Result<TestConfig, _> = toml::from_str(toml_data_overflow);
         assert!(

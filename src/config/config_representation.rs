@@ -4,7 +4,7 @@ use crate::config::serde_deserializer::deserialize_telemetry;
 use crate::config::serde_deserializer::deserialize_value_or_u32;
 use crate::config::serde_deserializer::max_bytes;
 use liquidcan::payloads::CanDataType;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 #[serde(remote = "CanDataType")]
@@ -126,13 +126,13 @@ device_name = "Emulator1"
             .find(|p| p.name == "Parameter1")
             .expect("Parameter1 should exist");
         assert_eq!(param1.value, 0xABAC0);
-        assert_eq!(param1.locked, false);
+        assert!(!param1.locked);
 
         let param2 = parameters
             .iter()
             .find(|p| p.name == "Parameter2")
             .expect("Parameter2 should exist");
         assert_eq!(param2.value, 0); // false -> 0
-        assert_eq!(param2.locked, true);
+        assert!(param2.locked);
     }
 }

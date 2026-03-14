@@ -2,6 +2,7 @@ mod can_manager;
 mod config;
 mod message_handling;
 
+use crate::can_manager::socket_manager;
 use crate::message_handling::{
     build_telemetry_group_updates, handle_message, parse_can_message, registration_flow_messages,
 };
@@ -13,8 +14,8 @@ use std::time::{Duration, Instant};
 
 fn make_message_id(receiver_id: u8, sender_id: u8) -> CanMessageId {
     CanMessageId::new()
-        .with_receiver_id(receiver_id.into())
-        .with_sender_id(sender_id.into())
+        .with_receiver_id(receiver_id)
+        .with_sender_id(sender_id)
         .with_priority(CanMessagePriority::Low)
 }
 
@@ -95,7 +96,7 @@ fn main() {
             }
         }
 
-        let res = can_manager::socket_manager::read_frame(&mut socket);
+        let res = socket_manager::read_frame(&mut socket);
         let Ok(frame) = res else {
             if res.should_retry() {
                 continue;
