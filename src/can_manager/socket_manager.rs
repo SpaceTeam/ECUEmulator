@@ -1,13 +1,13 @@
 use crate::can_manager::errors::SendFrameError;
-use liquidcan::{CanMessageFrame, CanMessageId};
+use liquidcan::{CanMessage, CanMessageId};
 use socketcan::{CanAnyFrame, CanFdSocket, EmbeddedFrame, Socket};
-use zerocopy::IntoBytes;
 
 #[allow(dead_code)]
 pub fn open_socket(interface: &str) -> Result<CanFdSocket, std::io::Error> {
     CanFdSocket::open(interface)
 }
 
+#[allow(dead_code)]
 pub fn read_frame(socket: &mut CanFdSocket) -> Result<CanAnyFrame, std::io::Error> {
     socket.read_frame()
 }
@@ -16,13 +16,14 @@ pub fn read_frame(socket: &mut CanFdSocket) -> Result<CanAnyFrame, std::io::Erro
 pub fn send_frame(
     socket: &mut CanFdSocket,
     can_message_id: CanMessageId,
-    can_message_frame: CanMessageFrame,
+    can_message: CanMessage,
 ) -> Result<(), SendFrameError> {
     let raw_id: u16 = can_message_id.into();
     let id = socketcan::StandardId::new(raw_id).ok_or(SendFrameError::InvalidId { raw_id })?;
-    let bytes = can_message_frame.as_bytes();
-    let frame = socketcan::CanFdFrame::new(id, bytes)
-        .ok_or(SendFrameError::InvalidFrameLength { len: bytes.len() })?;
+    let frame: socketcan::CanFdFrame = can_message.into();
+    let data = frame.data();
+    let frame = socketcan::CanFdFrame::new(id, data)
+        .ok_or(SendFrameError::InvalidFrameLength { len: data.len() })?;
 
     socket.write_frame_insist(&frame)?;
     Ok(())
