@@ -1,0 +1,96 @@
+name: Release + Docker build/push (main)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Needed to create GitHub Releases
+permissions:
+  contents: write
+
+env:
+  # Change this to your Docker Hub repo
+  DOCKER_IMAGE: tuwienspaceteam/ecuemulator
+
+jobs:
+  docker:
+    name: Build and push Docker image
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            # Always push an immutable tag for each commit
+            type=sha,format=short
+            # Convenience tags for main
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=main,enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          repository: ${{ env.DOCKER_IMAGE }}
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-22.04
+    needs: docker
+
+    steps:
+      - name: Compute version vars
+        id: vars
+        run: |
+          echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          # One release per commit on main
+          tag_name: main-${{ steps.vars.outputs.short_sha }}
+          name: main-${{ steps.vars.outputs.short_sha }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          prerelease: false
+          body: |
+            Docker images pushed to Docker Hub:
+            - `${{ env.DOCKER_IMAGE }}:latest`
+            - `${{ env.DOCKER_IMAGE }}:main`
+            - `${{ env.DOCKER_IMAGE }}:sha-${{ steps.vars.outputs.short_sha }}`
