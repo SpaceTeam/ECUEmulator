@@ -2,15 +2,13 @@ services:
   ecuemulator:
     build: .
     image: ecuemulator:local
-    cap_add:
-      - NET_ADMIN
+    # Use host networking so the container can access host SocketCAN interfaces (e.g. vcan0)
+    network_mode: host
     environment:
-      # Name of the vcan interface created inside the container
-      VCAN_IFACE: ${VCAN_IFACE:-vcan0}
       # Path to config inside the container
       CONFIG_PATH: /config/config.toml
-      # Set to 0 if you do not want the entrypoint to modify can_interface in the config
-      PATCH_CONFIG_CAN_IFACE: ${PATCH_CONFIG_CAN_IFACE:-1}
+      # Optional: override SocketCAN interface without changing the config file
+      # CAN_INTERFACE: ${CAN_INTERFACE:-vcan0}
     volumes:
       # Bind-mount config file from host into the container
       - ./config.toml:/config/config.toml:ro

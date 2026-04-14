@@ -1,9 +1,9 @@
-name: Release + Docker build/push (main)
+name: Release + Docker build/push
 
 on:
   push:
     branches:
-      - main
+      - "**"
 
 # Needed to create GitHub Releases
 permissions:
@@ -38,9 +38,8 @@ jobs:
           tags: |
             # Always push an immutable tag for each commit
             type=sha,format=short
-            # Convenience tags for main
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=main,enable={{is_default_branch}}
+            # Also tag with the branch name (sanitized), e.g. "main", "feature-xyz"
+            type=ref,event=branch
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -56,12 +55,15 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}:latest', env.DOCKER_IMAGE) || '' }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Docker Hub Description
+        if: github.ref == 'refs/heads/main'
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
@@ -72,6 +74,7 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-22.04
     needs: docker
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Compute version vars

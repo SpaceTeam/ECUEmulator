@@ -1,52 +1,11 @@
-mod can_manager;
-mod config;
-mod message_handling;
-
-use crate::can_manager::socket_manager;
-use crate::message_handling::{
-    build_telemetry_group_updates, handle_message, parse_can_message, registration_flow_messages,
-};
-use liquidcan::raw_can_message::CanMessagePriority;
-use liquidcan::CanMessageId;
-use socketcan::{CanFdSocket, ShouldRetry, Socket};
+use socketcan::{ShouldRetry, Socket};
 use std::env;
 use std::time::{Duration, Instant};
-
-fn make_message_id(receiver_id: u8, sender_id: u8) -> CanMessageId {
-    CanMessageId::new()
-        .with_receiver_id(receiver_id)
-        .with_sender_id(sender_id)
-        .with_priority(CanMessagePriority::Low)
-}
-
-fn should_also_notify_server(msg: &liquidcan::CanMessage) -> bool {
-    matches!(
-        msg,
-        liquidcan::CanMessage::ParameterSetConfirmation { .. }
-            | liquidcan::CanMessage::ParameterSetLockConfirmation { .. }
-    )
-}
-
-fn send_messages(
-    socket: &mut CanFdSocket,
-    sender_id: u8,
-    receiver_id: u8,
-    messages: Vec<liquidcan::CanMessage>,
-) {
-    for msg in messages {
-        let id = make_message_id(receiver_id, sender_id);
-        if let Err(err) = can_manager::socket_manager::send_frame(socket, id, msg.clone()) {
-            eprintln!("Error sending CAN FD frame: {err:?}");
-        }
-        if receiver_id != 0 && should_also_notify_server(&msg) {
-            let server_id = 0;
-            let server_msg_id = make_message_id(server_id, sender_id);
-            if let Err(err) = can_manager::socket_manager::send_frame(socket, server_msg_id, msg) {
-                eprintln!("Error sending CAN FD frame to server: {err:?}");
-            }
-        }
-    }
-}
+use ECUEmulator::can_manager::{self, send_messages, socket_manager};
+use ECUEmulator::config;
+use ECUEmulator::message_handling::{
+    build_telemetry_group_updates, handle_message, parse_can_message, registration_flow_messages,
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -60,13 +19,10 @@ fn main() {
         return;
     };
 
-    if config.node_id > 31 {
-        eprintln!("Invalid node_id {} (must be <= 31)", config.node_id);
-        return;
-    }
     let sender_id = config.node_id as u8;
 
     let res = can_manager::socket_manager::open_socket(&config.can_interface);
+
     let Ok(mut socket) = res else {
         eprintln!("Error opening CAN FD socket: :{:?}", res.err().unwrap());
         return;

@@ -17,51 +17,41 @@ sudo ip link set up vcan0
 
 ### Docker / Docker Compose
 
-This project can run fully containerized. The container creates a `vcan` interface **at runtime** inside its network namespace.
+The container **does not** create or manage any CAN interfaces. You must provide a SocketCAN interface from the outside (e.g. create `vcan0` on the host).
 
-Requirements:
-- Docker
-- Run container with `NET_ADMIN` capability (needed for `ip link add ... type vcan`)
-- Host kernel must support `vcan` (usually: `sudo modprobe vcan` once per boot)
+If you want the container to use a host `vcan0`, run it in the host network namespace.
 
-#### Docker build + run
+#### Docker build + run (host networking)
 ```bash
 docker build -t ecuemulator .
 
-# create vcan0 in the container and run the emulator
-docker run --rm -it \
-  --cap-add=NET_ADMIN \
-  -v "$(pwd)/config.toml:/config/config.toml" \
-  ecuemulator
-```
+# create vcan0 on the host first
+sudo modprobe vcan
+sudo ip link add dev vcan0 type vcan 2>/dev/null || true
+sudo ip link set up vcan0
 
-Interface name can be configured:
-```bash
 docker run --rm -it \
-  --cap-add=NET_ADMIN \
-  -e VCAN_IFACE=vcan42 \
-  -v "$(pwd)/config.toml:/config/config.toml" \
+  --network host \
+  -v "$(pwd)/config.toml:/config/config.toml:ro" \
   ecuemulator
 ```
 
 Config handling:
 - The container reads config from `${CONFIG_PATH}` (default: `/config/config.toml`).
 - If you **don’t** bind-mount a config file, the container will seed `/config/config.toml` from `/config/sample_config.toml`.
-- If you **do** bind-mount `./config.toml:/config/config.toml`, create `./config.toml` first (see the compose example below).
-- By default, the entrypoint patches `can_interface = "..."` in the config to match `VCAN_IFACE`.
-  Disable this with `-e PATCH_CONFIG_CAN_IFACE=0`.
+- You can override the CAN interface at runtime with `CAN_INTERFACE`. Example: `-e CAN_INTERFACE=vcan42`.
 
 #### Docker Compose
 ```bash
 # seed a config in the repo root (first run)
 cp -n data/sample_config.toml ./config.toml || true
 
-docker compose up --build
-```
+# create vcan0 on the host first
+sudo modprobe vcan
+sudo ip link add dev vcan0 type vcan 2>/dev/null || true
+sudo ip link set up vcan0
 
-To change the interface name when using compose:
-```bash
-VCAN_IFACE=vcan42 docker compose up --build
+docker compose up --build
 ```
 
 ## Development

@@ -10,17 +10,10 @@ RUN cargo build --release
 # --- Runtime stage ---
 FROM debian:trixie-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    iproute2 \
-    can-utils \
-  && rm -rf /var/lib/apt/lists/*
-
 # Default config path inside the container.
 # You can bind-mount a single file from the host, e.g.:
 #   -v ./config.toml:/config/config.toml
-ENV CONFIG_PATH=/config/config.toml \
-    VCAN_IFACE=vcan0 \
-    PATCH_CONFIG_CAN_IFACE=1
+ENV CONFIG_PATH=/config/config.toml
 
 COPY --from=builder /src/target/release/ECUEmulator /usr/local/bin/ecuemulator
 COPY data/sample_config.toml /config/sample_config.toml
