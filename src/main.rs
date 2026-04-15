@@ -43,6 +43,7 @@ fn main() {
     };
     let mut last_update = Instant::now();
 
+    println!("Starting ECUEmulator");
     loop {
         if let Some(interval) = update_interval {
             if last_update.elapsed() >= interval {
