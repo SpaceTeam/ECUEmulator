@@ -34,7 +34,7 @@ fn main() {
     }
 
     let registration_messages = registration_flow_messages(&config);
-    send_messages(&mut socket, sender_id, 0, registration_messages);
+    send_messages(&mut socket, sender_id, 1, registration_messages);
 
     let update_interval = if config.frequency == 0 {
         None
@@ -48,7 +48,7 @@ fn main() {
         if let Some(interval) = update_interval {
             if last_update.elapsed() >= interval {
                 let updates = build_telemetry_group_updates(&config);
-                send_messages(&mut socket, sender_id, 0, updates);
+                send_messages(&mut socket, sender_id, 1, updates);
                 last_update = Instant::now();
             }
         }
