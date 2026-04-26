@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - "**"
+    tags:
+      - "docker-build"
 
-# Needed to create GitHub Releases
+
+
 permissions:
   contents: write
+  actions: write
 
 env:
-  # Change this to your Docker Hub repo
   DOCKER_IMAGE: tuwienspaceteam/ecuemulator
 
 jobs:
@@ -70,29 +73,3 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
           repository: ${{ env.DOCKER_IMAGE }}
 
-  release:
-    name: Create GitHub Release
-    runs-on: ubuntu-22.04
-    needs: docker
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Compute version vars
-        id: vars
-        run: |
-          echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          # One release per commit on main
-          tag_name: main-${{ steps.vars.outputs.short_sha }}
-          name: main-${{ steps.vars.outputs.short_sha }}
-          target_commitish: ${{ github.sha }}
-          generate_release_notes: true
-          prerelease: false
-          body: |
-            Docker images pushed to Docker Hub:
-            - `${{ env.DOCKER_IMAGE }}:latest`
-            - `${{ env.DOCKER_IMAGE }}:main`
-            - `${{ env.DOCKER_IMAGE }}:sha-${{ steps.vars.outputs.short_sha }}`

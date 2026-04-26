@@ -80,9 +80,9 @@ run_step() {
 
         all)
             run_step build || return 1
-            run_step test || return 1
             run_step fmt || return 1
             run_step clippy || return 1
+            run_step test || return 1
             ;;
         
         *)

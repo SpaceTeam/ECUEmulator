@@ -12,9 +12,9 @@ pub fn load_config(path: &str) -> Result<EmulatorData> {
         .try_deserialize()
         .with_context(|| format!("Failed to deserialize config from {}", path))?;
 
-    if emulator_data.node_id > 31 {
+    if emulator_data.node_id >= 31 || emulator_data.node_id <= 1 {
         return Err(anyhow::anyhow!(
-            "Invalid node_id {} (must be <= 31)",
+            "Invalid node_id {} (must be <= 31 && > 1)",
             emulator_data.node_id
         ));
     }
@@ -35,9 +35,9 @@ pub fn load_config(path: &str) -> Result<EmulatorData> {
 mod tests {
     use super::*;
     use std::fs;
-    use std::sync::{Mutex, OnceLock};
+    use std::sync::Mutex;
 
-    static ENV_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
+    static ENV_MUTEX: Mutex<()> = Mutex::new(());
 
     fn write_temp_config(contents: &str) -> String {
         let mut p = std::env::temp_dir();
@@ -54,7 +54,7 @@ mod tests {
         p.to_string_lossy().to_string()
     }
 
-    const SAMPLE_CONFIG: &str = r#"node_id = 1
+    const SAMPLE_CONFIG: &str = r#"node_id = 2
 frequency = 100
 firmware_hash = "0x123"
 can_interface = "vcan0"
@@ -73,14 +73,23 @@ device_name = "Emulator1"
   datatype = "UInt32"
 "#;
 
+    struct EnsureEnvRestored {
+        env: Option<String>,
+    }
+    impl Drop for EnsureEnvRestored {
+        fn drop(&mut self) {
+            match &self.env {
+                Some(v) => env::set_var("CAN_INTERFACE", v),
+                None => env::remove_var("CAN_INTERFACE"),
+            }
+        }
+    }
     #[test]
     fn can_interface_can_be_overridden_by_env_var() {
-        let _guard = ENV_MUTEX
-            .get_or_init(|| Mutex::new(()))
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
 
         let original = env::var("CAN_INTERFACE").ok();
+        let _ = EnsureEnvRestored { env: original };
 
         let path = write_temp_config(SAMPLE_CONFIG);
 
@@ -91,22 +100,14 @@ device_name = "Emulator1"
 
         // Cleanup temp file
         let _ = fs::remove_file(&path);
-
-        // Restore env
-        match original {
-            Some(v) => env::set_var("CAN_INTERFACE", v),
-            None => env::remove_var("CAN_INTERFACE"),
-        }
     }
 
     #[test]
     fn empty_can_interface_env_var_is_ignored() {
-        let _guard = ENV_MUTEX
-            .get_or_init(|| Mutex::new(()))
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
 
         let original = env::var("CAN_INTERFACE").ok();
+        let _ = EnsureEnvRestored { env: original };
 
         let path = write_temp_config(SAMPLE_CONFIG);
 
@@ -115,10 +116,5 @@ device_name = "Emulator1"
         assert_eq!(cfg.can_interface, "vcan0");
 
         let _ = fs::remove_file(&path);
-
-        match original {
-            Some(v) => env::set_var("CAN_INTERFACE", v),
-            None => env::remove_var("CAN_INTERFACE"),
-        }
     }
 }

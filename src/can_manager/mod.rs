@@ -33,7 +33,7 @@ pub fn send_messages(
             eprintln!("Error sending CAN FD frame: {err:?}");
         }
         if receiver_id != 0 && should_also_notify_server(&msg) {
-            let server_id = 0;
+            let server_id = 1;
             let server_msg_id = make_message_id(server_id, sender_id);
             if let Err(err) = can_manager::socket_manager::send_frame(socket, server_msg_id, msg) {
                 eprintln!("Error sending CAN FD frame to server: {err:?}");
